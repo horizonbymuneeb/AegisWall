@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -253,11 +253,11 @@ namespace AegisWall.Core
             {
                 byte[] loopback = new byte[16];
                 loopback[15] = 1;
-                AddV6AddressCondition(spec, WfpNative.ConditionIpRemoteAddressV6, loopback, 128);
+                AddV6AddressCondition(spec, WfpNative.ConditionIpRemoteAddress, loopback, 128);
             }
             else
             {
-                AddV4AddressCondition(spec, WfpNative.ConditionIpRemoteAddressV4, 0x7F000001, 0xFFFFFFFF);
+                AddV4AddressCondition(spec, WfpNative.ConditionIpRemoteAddress, 0x7F000001, 0xFFFFFFFF);
             }
 
             AddFilter(spec);
@@ -338,12 +338,12 @@ namespace AegisWall.Core
                 byte[] bytes = server.GetAddressBytes();
                 if (v6)
                 {
-                    AddV6AddressCondition(spec, WfpNative.ConditionIpRemoteAddressV6, bytes, 128);
+                    AddV6AddressCondition(spec, WfpNative.ConditionIpRemoteAddress, bytes, 128);
                 }
                 else
                 {
                     uint address = BitConverter.ToUInt32(bytes, 0);
-                    AddV4AddressCondition(spec, WfpNative.ConditionIpRemoteAddressV4, address, 0xFFFFFFFF);
+                    AddV4AddressCondition(spec, WfpNative.ConditionIpRemoteAddress, address, 0xFFFFFFFF);
                 }
             }
             AddFilter(spec);
@@ -531,3 +531,4 @@ namespace AegisWall.Core
         }
     }
 }
+

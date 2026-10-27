@@ -52,7 +52,9 @@ $required = @(
     'docs\TEST-PLAN.md',
     'docs\MALWARE-TESTING.md',
     'docs\TEST-LAB.md',
-    'docs\VERIFICATION.md'
+    'docs\VERIFICATION.md',
+    'docs\E2E-REPORT.md',
+    'docs\e2e-results-0.1.1.json'
 )
 
 foreach ($file in $required) {
@@ -88,6 +90,7 @@ if ($failures -gt 0) {
 }
 
 Write-Host 'Validation passed.' -ForegroundColor Green
+
 
 
 

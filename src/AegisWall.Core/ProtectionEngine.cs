@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -138,16 +138,19 @@ namespace AegisWall.Core
                     return;
                 }
 
-                string path = application;
-                if (string.IsNullOrWhiteSpace(path) && processId > 0)
+                string path = string.Empty;
+                if (processId > 0)
                 {
                     path = PathUtil.ProcessPath(processId);
                 }
                 if (string.IsNullOrWhiteSpace(path))
                 {
+                    path = application;
+                }
+                if (string.IsNullOrWhiteSpace(path))
+                {
                     path = "unknown process";
                 }
-
                 if (path.IndexOf("AegisWall", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     return;
@@ -711,7 +714,15 @@ namespace AegisWall.Core
             if (patch.ContainsKey("allowSystemDns")) { config.AllowSystemDns = Convert.ToBoolean(patch["allowSystemDns"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("requireKeyAtBoot")) { config.RequireKeyAtBoot = Convert.ToBoolean(patch["requireKeyAtBoot"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("watchdogEnabled")) { config.WatchdogEnabled = Convert.ToBoolean(patch["watchdogEnabled"], CultureInfo.InvariantCulture); }
-            if (patch.ContainsKey("testMode")) { config.TestMode = Convert.ToBoolean(patch["testMode"], CultureInfo.InvariantCulture); }
+            if (patch.ContainsKey("testMode"))
+            {
+                config.TestMode = Convert.ToBoolean(patch["testMode"], CultureInfo.InvariantCulture);
+                if (config.TestMode && config.IsLockdownActive)
+                {
+                    config.LockdownUntilUtc = DateTime.UtcNow.AddSeconds(Math.Max(15, config.TestLockdownSeconds)).ToString("o", CultureInfo.InvariantCulture);
+                    if (!config.LockdownReason.StartsWith("[TEST]", StringComparison.Ordinal)) { config.LockdownReason = "[TEST] " + config.LockdownReason; }
+                }
+            }
             if (patch.ContainsKey("testLockdownSeconds"))
             {
                 int seconds = Convert.ToInt32(patch["testLockdownSeconds"], CultureInfo.InvariantCulture);
@@ -771,6 +782,7 @@ namespace AegisWall.Core
         private IpcResponse Reload()
         {
             config = ConfigStore.Load();
+            hardwareKey = null;
             if (vaultKey != null)
             {
                 configVerified = ConfigSigner.Verify(config, vaultKey);
@@ -781,6 +793,7 @@ namespace AegisWall.Core
             }
 
             ApplyLocked();
+            WriteStatus();
             lastEvent = "reload";
             AuditLog.Append("reload", "Configuration reloaded", "service");
             return StatusResponse();
@@ -1025,4 +1038,10 @@ namespace AegisWall.Core
         }
     }
 }
+
+
+
+
+
+
 

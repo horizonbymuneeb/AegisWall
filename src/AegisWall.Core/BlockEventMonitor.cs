@@ -1,14 +1,18 @@
-using System;
-using System.Diagnostics;
+﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
+using System.Threading;
+using System.Xml.Linq;
 
 namespace AegisWall.Core
 {
     public sealed class BlockEventMonitor : IDisposable
     {
         private readonly ProtectionEngine engine;
-        private EventLog securityLog;
+        private Timer timer;
+        private long lastRecordId;
         private bool available;
+        private bool polling;
 
         public BlockEventMonitor(ProtectionEngine engine)
         {
@@ -24,11 +28,21 @@ namespace AegisWall.Core
         {
             try
             {
-                securityLog = new EventLog("Security");
-                securityLog.EnableRaisingEvents = true;
-                securityLog.EntryWritten += OnEntryWritten;
+                EventLogQuery query = new EventLogQuery("Security", PathType.LogName, "*[System[(EventID=5157)]]");
+                query.ReverseDirection = true;
+                using (EventLogReader reader = new EventLogReader(query))
+                {
+                    EventRecord record = reader.ReadEvent();
+                    if (record != null)
+                    {
+                        lastRecordId = record.RecordId ?? 0;
+                        record.Dispose();
+                    }
+                }
+
                 available = true;
-                AuditLog.Append("monitor.start", "Security event monitor started", "service");
+                timer = new Timer(Poll, null, 500, 1500);
+                AuditLog.Append("monitor.start", "Security 5157 polling monitor started", "service");
             }
             catch (Exception ex)
             {
@@ -37,64 +51,109 @@ namespace AegisWall.Core
             }
         }
 
-        private void OnEntryWritten(object sender, EntryWrittenEventArgs e)
+        private void Poll(object state)
         {
+            if (polling || !available)
+            {
+                return;
+            }
+
+            polling = true;
             try
             {
-                if (e.Entry == null)
+                EventLogQuery query = new EventLogQuery("Security", PathType.LogName, "*[System[(EventID=5157)]]");
+                query.ReverseDirection = true;
+                using (EventLogReader reader = new EventLogReader(query))
                 {
-                    return;
-                }
-
-                long instanceId = e.Entry.InstanceId;
-                if ((instanceId & 0xFFFF) != 5157)
-                {
-                    return;
-                }
-
-                string[] values = e.Entry.ReplacementStrings ?? new string[0];
-                string application = values.Length > 1 ? values[1] : string.Empty;
-                string processIdText = values.Length > 0 ? values[0] : string.Empty;
-                string filterName = string.Empty;
-                for (int i = 0; i < values.Length; i++)
-                {
-                    if (!string.IsNullOrEmpty(values[i]) && values[i].StartsWith("AegisWall", StringComparison.OrdinalIgnoreCase))
+                    for (int i = 0; i < 40; i++)
                     {
-                        filterName = values[i];
-                        break;
+                        EventRecord record = reader.ReadEvent();
+                        if (record == null)
+                        {
+                            break;
+                        }
+
+                        long recordId = 0;
+                        try
+                        {
+                            recordId = record.RecordId ?? 0;
+                            if (recordId <= lastRecordId)
+                            {
+                                break;
+                            }
+
+                            XDocument document = XDocument.Parse(record.ToXml());
+                            string application = ReadData(document, "Application");
+                            string filterName = ReadData(document, "FilterName");
+                            string filterOrigin = ReadData(document, "FilterOrigin");
+                            string processIdText = ReadData(document, "ProcessID");
+                            if (string.IsNullOrEmpty(processIdText)) { processIdText = ReadData(document, "ProcessId"); }
+
+                            if (string.IsNullOrEmpty(filterName)) { filterName = filterOrigin; }                            bool ours = (!string.IsNullOrEmpty(filterName) && filterName.StartsWith("AegisWall", StringComparison.OrdinalIgnoreCase))
+                                || string.Equals(filterOrigin, "Unknown", StringComparison.OrdinalIgnoreCase);
+
+                            if (ours)
+                            {                                int processId;
+                                int.TryParse(processIdText, NumberStyles.Integer, CultureInfo.InvariantCulture, out processId);
+                                engine.OnBlockedConnection(application, processId, filterName);
+                            }
+                        }
+                        finally
+                        {
+                            if (recordId > lastRecordId)
+                            {
+                                lastRecordId = recordId;
+                            }
+                            record.Dispose();
+                        }
                     }
                 }
-
-                if (string.IsNullOrEmpty(filterName))
-                {
-                    return;
-                }
-
-                int processId;
-                int.TryParse(processIdText, NumberStyles.Integer, CultureInfo.InvariantCulture, out processId);
-                engine.OnBlockedConnection(application, processId, filterName);
             }
-            catch
+            catch (Exception ex)
             {
+                AuditLog.Append("monitor.error", ex.Message, "service");
             }
+            finally
+            {
+                polling = false;
+            }
+        }
+
+        private static string ReadData(XDocument document, string name)
+        {
+            foreach (XElement element in document.Descendants())
+            {
+                if (element.Name.LocalName != "Data") { continue; }
+                XAttribute attribute = element.Attribute("Name");
+                if (attribute != null && string.Equals(attribute.Value, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return element.Value;
+                }
+            }
+            return string.Empty;
         }
 
         public void Dispose()
         {
-            if (securityLog != null)
+            if (timer != null)
             {
                 try
                 {
-                    securityLog.EnableRaisingEvents = false;
-                    securityLog.EntryWritten -= OnEntryWritten;
-                    securityLog.Dispose();
+                    timer.Dispose();
                 }
                 catch
                 {
                 }
-                securityLog = null;
+                timer = null;
             }
             available = false;
         }
     }
 }
+
+
+
+
+
+
+

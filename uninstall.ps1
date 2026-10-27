@@ -101,10 +101,12 @@ if (-not $ServiceOnly) {
         Write-Host "Configuration retained at $dataDir. Use -PurgeData to remove it."
     }
 } else {
+    Remove-Item -LiteralPath (Join-Path $InstallDir 'portable.mode') -Force -ErrorAction SilentlyContinue
     Write-Host 'Service and filters removed. MSI will delete program files.'
 }
 
 Write-Host 'AegisWall uninstalled.'
+
 
 
 

@@ -491,14 +491,14 @@ namespace AegisWall.Cli
                 Console.Error.WriteLine("curl.exe was not found in System32.");
                 return 1;
             }
-            string directory = Path.Combine(Path.GetTempPath(), "AegisWallTest");
+            string directory = Path.Combine(Path.GetTempPath(), "NetProbe");
             Directory.CreateDirectory(directory);
             string beacon = Path.Combine(directory, "beacon.exe");
             File.Copy(source, beacon, true);
 
             int beforeCount = before.Status.BlockedAttempts;
             ProcessResult result = ProcessRunner.Run(beacon, "https://example.com --max-time 6 -s -o NUL -w \"%{http_code}\"", 15000);
-            Thread.Sleep(1500);
+            Thread.Sleep(4000);
             IpcResponse after = IpcClient.Send(new IpcRequest { Cmd = "status" }, 10000);
             int afterCount = after != null && after.Status != null ? after.Status.BlockedAttempts : beforeCount;
             bool blocked = afterCount > beforeCount || result.ExitCode != 0;
@@ -841,6 +841,8 @@ namespace AegisWall.Cli
         }
     }
 }
+
+
 
 
 

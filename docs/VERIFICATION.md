@@ -1,4 +1,4 @@
-# Verification status
+﻿# Verification status
 
 This page is deliberately honest about what was tested and what was not.
 
@@ -30,26 +30,24 @@ This page is deliberately honest about what was tested and what was not.
 | MSI layout | administrative install extracts all payload files |
 | MSI install/uninstall | portable 0.1.1 installed on this PC; MSI uninstall removed the product; leftovers cleaned manually |
 | CI | GitHub Actions validate + build + tests + PSScriptAnalyzer, green |
+| Full portable E2E | 31/31 checks: MSI install, task, dev key, arm, 18 WFP filters, allowed/blocked app, automatic lockdown, timer expiry, task-stop persistence, key removal, config tamper, uninstall. See [E2E-REPORT.md](E2E-REPORT.md) |
 
 ## Not live-tested end-to-end here
 
 | Area | Why |
 | --- | --- |
-| Actual WFP blocking | Requires an elevated service; normal shell is non-admin and SAC blocks unsigned EXEs |
-| Allow/deny for a real app | Same as above; the tester must arm on a VM |
-| Trigger-based lockdown (5157) | Requires admin service + audit policy + a real blocked attempt |
-| Service stop persistence | Requires installed compiled service |
-| Reboot persistence | Requires a VM/reboot |
+| Reboot persistence | Task stop/restart was tested, not a full reboot |
+| UI click-through after latest fix | UI rendering covered by self-test; not clicked end-to-end |
 | YubiKey enrollment | No YubiKey hardware attached |
 | USB removable-drive unlock | DPAPI tested in a temp folder, not a real USB drive |
 | Compiled MSI service under SAC-off | Not run on this machine |
-| Portable task install end-to-end | Install log showed `Core task status: Running` on this PC, but network blocking was not verified |
 | Real malware containment | Not safe on the development machine; requires isolated VM |
-| UI after the latest CLI-path/icon fix | Fix is built; not re-installed end-to-end on this PC after cleanup |
 
 ## What this means
 
-The build, unit-level crypto/config/key code, real app scanner, UI rendering, MSI packaging and uninstall path are tested. The **enforcement path** (WFP filters, lockdown, service/task behavior under real admin, YubiKey, reboot) still needs the spare-laptop/VM test described in `TEST-PLAN.md` and `MALWARE-TESTING.md`.
+The build, unit-level crypto/config/key code, real app scanner, UI rendering, MSI packaging, uninstall path and the **portable WFP enforcement path** are tested. The 31-check E2E run covered MSI install, task start, enroll/unlock/arm, 18 filters, allowed/blocked traffic, automatic lockdown, timer expiry, task-stop persistence, key removal, config tamper and uninstall. See [E2E-REPORT.md](E2E-REPORT.md).
+
+Still requiring the spare-laptop/VM run: YubiKey hardware, a real removable USB key, compiled service under SAC-off, full reboot, UI click-through and real malware samples.
 
 Do not treat CI green as proof that WFP enforcement works on every PC. CI only builds and runs unit tests; it does not apply firewall filters.
 
@@ -58,7 +56,7 @@ Do not treat CI green as proof that WFP enforcement works on every PC. CI only b
 1. Install the latest `AegisWall-Portable-0.1.1-x64.msi` on a VM.
 2. Enroll a USB key or YubiKey.
 3. Allow one browser.
-4. Run Test lab → beacon test.
+4. Run Test lab -> beacon test.
 5. Verify the browser works, the beacon is blocked, and lockdown starts.
 6. Stop the core task, run the beacon again, verify persistent filters.
 7. Remove the key, verify grace and fail-closed.
@@ -66,3 +64,5 @@ Do not treat CI green as proof that WFP enforcement works on every PC. CI only b
 9. Uninstall and verify the task/service and filters are gone.
 
 Record the results in `TEST-PLAN.md`.
+
+

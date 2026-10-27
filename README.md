@@ -229,7 +229,8 @@ Read [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md), [docs/ARCHITECTURE.md](docs/A
 - [Test plan (MSI, keys, lockdown, tamper, uninstall)](docs/TEST-PLAN.md)
 - [Malware containment testing](docs/MALWARE-TESTING.md)
 - [Test lab and test mode](docs/TEST-LAB.md)
-- [Verification status: what was and was not live-tested](docs/VERIFICATION.md)
+- [Verification status](docs/VERIFICATION.md)
+- [End-to-end test report (31/31)](docs/E2E-REPORT.md)
 - [Smart App Control and signing](docs/SMART-APP-CONTROL.md)
 - [Threat model and limits](docs/THREAT-MODEL.md)
 
@@ -244,6 +245,7 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 ## License
 
 MIT (c) 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
 
 
 

@@ -1,0 +1,182 @@
+﻿[
+    {
+        "Name":  "msi-install",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "core-task-exists",
+        "Ok":  true,
+        "Detail":  "Running"
+    },
+    {
+        "Name":  "core-task-running",
+        "Ok":  true,
+        "Detail":  "Running"
+    },
+    {
+        "Name":  "dev-key-created",
+        "Ok":  true,
+        "Detail":  "C:\\ProgramData\\AegisWall\\devkey.bin"
+    },
+    {
+        "Name":  "enroll",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "unlock",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "unlocked-status",
+        "Ok":  true,
+        "Detail":  "Disarmed"
+    },
+    {
+        "Name":  "baseline-curl",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "allow-curl",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "arm",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "armed-status",
+        "Ok":  true,
+        "Detail":  "Protected filters=18"
+    },
+    {
+        "Name":  "monitor-available",
+        "Ok":  true,
+        "Detail":  "monitor=True"
+    },
+    {
+        "Name":  "allowed-curl",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "set-test-mode",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "clear-initial-lockdown",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "beacon-blocked",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "lockdown-started",
+        "Ok":  true,
+        "Detail":  "Lockdown remaining=14"
+    },
+    {
+        "Name":  "lockdown-blocks-allowed-app",
+        "Ok":  true,
+        "Detail":  "exit 7"
+    },
+    {
+        "Name":  "clear-auto-lockdown",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "set-manual-mode",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "manual-lockdown",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "manual-lockdown-expired",
+        "Ok":  true,
+        "Detail":  "Protected"
+    },
+    {
+        "Name":  "beacon-blocked-with-task-stopped",
+        "Ok":  true,
+        "Detail":  "exit 7"
+    },
+    {
+        "Name":  "task-restarted",
+        "Ok":  true,
+        "Detail":  "KeyLocked"
+    },
+    {
+        "Name":  "task-restart-unlock",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "set-grace",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "key-removed-fail-closed",
+        "Ok":  true,
+        "Detail":  "KeyLocked"
+    },
+    {
+        "Name":  "key-restored-unlock",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "config-tamper-reload",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "config-tamper-detected",
+        "Ok":  true,
+        "Detail":  "Unverified"
+    },
+    {
+        "Name":  "config-restored",
+        "Ok":  true,
+        "Detail":  "Protected"
+    },
+    {
+        "Name":  "disarm",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "disarmed-status",
+        "Ok":  true,
+        "Detail":  "Disarmed"
+    },
+    {
+        "Name":  "msi-uninstall",
+        "Ok":  true,
+        "Detail":  "exit 0"
+    },
+    {
+        "Name":  "core-task-removed",
+        "Ok":  true,
+        "Detail":  "task"
+    },
+    {
+        "Name":  "install-dir-removed",
+        "Ok":  true,
+        "Detail":  "C:\\Program Files\\AegisWall"
+    }
+]

@@ -10,6 +10,13 @@ All notable changes to AegisWall are documented here.
 - The compiled MSI automatically switches to portable task mode when Smart App Control is on.
 - MSI installs write `%ProgramData%\AegisWall\msi-install.log`.
 - Existing services are removed with a wait loop before reinstall.
+- WFP loopback/DNS filters now use the generic ALE remote-address condition (fixes FWP_E_CONDITION_NOT_FOUND).
+- 5157 monitor parses namespaced XML, uses FilterOrigin=Unknown for AegisWall filters and polls the Security log reliably.
+- reload writes status.json immediately, so tamper detection is visible without a 2s delay.
+- Enabling test mode caps an existing lockdown to the test timer.
+- Test beacon moved to %TEMP%\NetProbe so the engine does not ignore it.
+- Uninstall removes the portable.mode marker.
+- Portable UI uses AEGISWALL_HOME to find the CLI; app/shortcut icon added.
 
 ### Added
 
@@ -42,4 +49,5 @@ Initial MVP.
 - WinForms light-theme UI with custom rounded inputs, dropdowns, number fields
   and audit rows.
 - GitHub CI, issue templates and validation script.
+
 
