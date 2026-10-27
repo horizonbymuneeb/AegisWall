@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Validate scripts and assets
+        shell: powershell
+        run: .\tools\validate.ps1
+
+      - name: Build and test
+        shell: powershell
+        run: .\build.ps1 -Test
+
+      - name: Run PSScriptAnalyzer
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -AllowClobber
+          $issues = @(Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error)
+          if ($issues.Count -gt 0) {
+            $issues | Format-Table -AutoSize
+            exit 1
+          }
+          Write-Host 'PSScriptAnalyzer: no errors.'
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AegisWall-build
+          path: build/

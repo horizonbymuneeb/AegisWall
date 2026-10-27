@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="horizonbymuneeb"
+           UpgradeCode="$(var.UpgradeCode)">
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Platform="x64"
+             SummaryCodepage="1252" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Property Id="PORTABLE" Value="$(var.Portable)" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="ARPCOMMENTS" Value="Hardware-anchored application firewall and network killswitch." />
+    <Property Id="ARPHELPLINK" Value="https://github.com/horizonbymuneeb/AegisWall" />
+
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <UIRef Id="WixUI_InstallDir" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="AegisWall" />
+      </Directory>
+    </Directory>
+
+    <Feature Id="MainFeature" Title="$(var.ProductName)" Level="1">
+      <ComponentGroupRef Id="PayloadFiles" />
+    </Feature>
+
+    <CustomAction Id="InstallServiceCompiled"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check"
+                  ExeCommand="&quot;[WindowsFolder]System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]install.ps1&quot; -SkipBuild -ServiceOnly -Force -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+
+    <CustomAction Id="InstallServicePortable"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check"
+                  ExeCommand="&quot;[WindowsFolder]System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]install.ps1&quot; -SkipBuild -ServiceOnly -Force -Portable -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+
+    <CustomAction Id="UninstallService"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check"
+                  ExeCommand="&quot;[WindowsFolder]System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]uninstall.ps1&quot; -ServiceOnly -Force -InstallDir &quot;[INSTALLFOLDER].&quot;" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallServiceCompiled" After="InstallFiles">NOT Installed AND PORTABLE="0"</Custom>
+      <Custom Action="InstallServicePortable" After="InstallFiles">NOT Installed AND PORTABLE="1"</Custom>
+      <Custom Action="UninstallService" Before="RemoveFiles">Installed</Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
+

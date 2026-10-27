@@ -1,0 +1,192 @@
+﻿[CmdletBinding()]
+param(
+    [switch]$Portable,
+    [switch]$SkipBuild,
+    [switch]$ServiceOnly,
+    [switch]$Force,
+    [string]$InstallDir = (Join-Path $env:ProgramFiles 'AegisWall')
+)
+
+$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $MyInvocation.MyCommand.Path
+$InstallDir = [System.IO.Path]::GetFullPath($InstallDir)
+
+function Assert-Administrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        throw 'Run install.ps1 from an elevated PowerShell window.'
+    }
+}
+
+function Get-SacState {
+    try {
+        $value = (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy' -Name 'VerifiedAndReputablePolicyState' -ErrorAction Stop).VerifiedAndReputablePolicyState
+        return [int]$value
+    }
+    catch {
+        return -1
+    }
+}
+
+Assert-Administrator
+
+$sacState = Get-SacState
+if ($sacState -eq 1 -or $sacState -eq 2) {
+    Write-Warning "Smart App Control is ON (state $sacState). Unsigned AegisWall EXEs may be blocked."
+    Write-Host 'Recommended: use -Portable. It runs the UI/CLI/service through the signed PowerShell host.'
+    Write-Host 'See docs\SMART-APP-CONTROL.md for the full explanation and signed-release options.'
+    if (-not $Portable -and -not $Force) {
+        $answer = Read-Host 'Continue with the unsigned EXE install anyway? [y/N]'
+        if ($answer -notmatch '^[yY]') {
+            Write-Host 'Cancelled. Re-run with: .\install.ps1 -Portable'
+            return
+        }
+    }
+}
+
+if (-not $ServiceOnly -and -not $Portable -and -not $SkipBuild) {
+    Write-Host 'Building AegisWall...'
+    & (Join-Path $root 'build.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+}
+
+if (Test-Path -LiteralPath $InstallDir) {
+    Write-Host "Updating existing install at $InstallDir"
+} else {
+    New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
+}
+
+$dataDir = Join-Path $env:ProgramData 'AegisWall'
+New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+
+if (-not $ServiceOnly) {
+    if ($Portable) {
+        Write-Host 'Installing portable (PowerShell-hosted) mode...'
+        Copy-Item -LiteralPath (Join-Path $root 'src') -Destination $InstallDir -Recurse -Force
+        Copy-Item -LiteralPath (Join-Path $root 'assets') -Destination $InstallDir -Recurse -Force
+        foreach ($file in @('Run-AegisWall.ps1', 'Run-AegisWall-Cli.ps1', 'Run-AegisWall-Service.ps1', 'AegisWall-Portable.bat')) {
+            Copy-Item -LiteralPath (Join-Path $root $file) -Destination $InstallDir -Force
+        }
+    } else {
+        Write-Host 'Installing compiled mode...'
+        Copy-Item -Path (Join-Path $root 'build\*') -Destination $InstallDir -Recurse -Force
+        Copy-Item -LiteralPath (Join-Path $root 'src') -Destination $InstallDir -Recurse -Force
+        foreach ($file in @('Run-AegisWall.ps1', 'Run-AegisWall-Cli.ps1', 'Run-AegisWall-Service.ps1', 'AegisWall-Portable.bat')) {
+            Copy-Item -LiteralPath (Join-Path $root $file) -Destination $InstallDir -Force
+        }
+    }
+
+    foreach ($file in @('README.md', 'LICENSE', 'docs')) {
+        $source = Join-Path $root $file
+        if (Test-Path -LiteralPath $source) {
+            Copy-Item -LiteralPath $source -Destination $InstallDir -Recurse -Force
+        }
+    }
+}
+
+if ($Portable) {
+    Set-Content -LiteralPath (Join-Path $InstallDir 'portable.mode') -Value 'portable' -Encoding ASCII
+}
+
+& icacls.exe $InstallDir /inheritance:r /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)RX' 'Users:(OI)(CI)RX' | Out-Null
+& icacls.exe $dataDir /inheritance:r /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' 'Users:(OI)(CI)R' | Out-Null
+
+$serviceName = 'AegisWall'
+$existing = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+if ($existing) {
+    Write-Host 'Stopping existing AegisWall service...'
+    Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 1
+    & sc.exe delete $serviceName | Out-Null
+    Start-Sleep -Seconds 1
+}
+
+if ($Portable) {
+    $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $binary = '"' + $powershell + '" -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $InstallDir 'Run-AegisWall-Service.ps1') + '"'
+    New-Service -Name $serviceName -BinaryPathName $binary -DisplayName 'AegisWall' -Description 'Hardware-anchored application firewall and network killswitch.' -StartupType Automatic | Out-Null
+} else {
+    $binary = '"' + (Join-Path $InstallDir 'AegisWall.Service.exe') + '"'
+    New-Service -Name $serviceName -BinaryPathName $binary -DisplayName 'AegisWall' -Description 'Hardware-anchored application firewall and network killswitch.' -StartupType Automatic | Out-Null
+}
+
+& sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/10000/restart/30000 | Out-Null
+try {
+    & sc.exe sdset $serviceName 'D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)' | Out-Null
+}
+catch {
+    Write-Warning 'Could not apply the service DACL.'
+}
+
+$taskName = 'AegisWall Watchdog'
+Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
+try {
+    if ($Portable) {
+        $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $taskAction = New-ScheduledTaskAction -Execute $powershell -Argument ('-NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $InstallDir 'Run-AegisWall-Cli.ps1') + '" watchdog')
+    } else {
+        $taskAction = New-ScheduledTaskAction -Execute (Join-Path $InstallDir 'AegisWall.Cli.exe') -Argument 'watchdog'
+    }
+    $atStartup = New-ScheduledTaskTrigger -AtStartup
+    $everyMinute = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 1) -RepetitionDuration (New-TimeSpan -Days 3650)
+    Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger @($atStartup, $everyMinute) -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
+}
+catch {
+    Write-Warning "Could not create the watchdog task: $($_.Exception.Message)"
+}
+
+try {
+    & auditpol.exe /set /subcategory:'Filtering Platform Connection' /failure:enable | Out-Null
+}
+catch {
+    Write-Warning 'Could not enable Filtering Platform audit policy. Automatic trigger detection may be unavailable.'
+}
+
+try {
+    Start-Service -Name $serviceName
+    Start-Sleep -Seconds 2
+    $service = Get-Service -Name $serviceName
+    Write-Host ("Service status: " + $service.Status)
+}
+catch {
+    Write-Warning "Service did not start: $($_.Exception.Message)"
+    if ($Portable) {
+        Write-Host "Check $dataDir\service-bootstrap.log"
+    }
+}
+
+try {
+    $target = if ($Portable) { Join-Path $InstallDir 'AegisWall-Portable.bat' } else { Join-Path $InstallDir 'AegisWall.UI.exe' }
+    $shell = New-Object -ComObject WScript.Shell
+    foreach ($folder in @([Environment]::GetFolderPath('CommonStartMenu'), [Environment]::GetFolderPath('CommonDesktopDirectory'))) {
+        if (-not [string]::IsNullOrEmpty($folder)) {
+            $link = $shell.CreateShortcut((Join-Path $folder 'AegisWall.lnk'))
+            $link.TargetPath = $target
+            $link.WorkingDirectory = $InstallDir
+            $link.Description = 'Hardware-anchored application firewall'
+            $link.Save()
+        }
+    }
+}
+catch {
+    Write-Warning "Could not create shortcuts: $($_.Exception.Message)"
+}
+
+Write-Host ''
+Write-Host 'AegisWall installed.'
+if ($Portable) {
+    Write-Host 'Launch the UI with: ' + (Join-Path $InstallDir 'AegisWall-Portable.bat')
+    Write-Host 'CLI from an elevated prompt: powershell -File "' + (Join-Path $InstallDir 'Run-AegisWall-Cli.ps1') + '" status'
+} else {
+    Write-Host 'Launch the UI with: ' + (Join-Path $InstallDir 'AegisWall.UI.exe')
+}
+Write-Host ''
+Write-Host 'Next:'
+Write-Host '  1. Enroll a YubiKey or USB key.'
+Write-Host '  2. Add your applications to the allowlist.'
+Write-Host '  3. Arm protection.'
+Write-Host 'Recovery code ko offline save karein.'
+
+
+

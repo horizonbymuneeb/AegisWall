@@ -1,0 +1,37 @@
+# Build output
+build/
+*.exe
+*.dll
+*.pdb
+*.zip
+*.nupkg
+
+# Runtime data
+logs/
+*.log
+audit.jsonl
+status.json
+last-command.json
+config.json
+devkey.bin
+aegiswall.key
+portable.mode
+
+# Signing material
+*.pfx
+*.p12
+*.snk
+*.cer
+
+# IDE and OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
+
+# Release artifacts
+dist/
+*.msi

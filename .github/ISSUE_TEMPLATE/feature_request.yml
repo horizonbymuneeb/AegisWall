@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a capability or hardening improvement
+title: "[feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What threat or workflow does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - WFP enforcement
+        - Hardware key
+        - Lockdown / triggers
+        - UI
+        - CLI
+        - Installer / hardening
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Security trade-offs
+      description: Could this weaken fail-closed behavior or expand the attack surface?

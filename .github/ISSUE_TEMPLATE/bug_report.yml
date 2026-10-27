@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a defect in AegisWall
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. Use SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: AegisWall version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version and build
+      placeholder: Windows 11 24H2 26100.xxxx
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Install mode
+      options:
+        - Compiled EXE
+        - Portable PowerShell mode
+    validations:
+      required: true
+  - type: dropdown
+    id: sac
+    attributes:
+      label: Smart App Control
+      options:
+        - "Off"
+        - "On"
+        - "Evaluation"
+        - "Unknown"
+    validations:
+      required: true
+  - type: input
+    id: key
+    attributes:
+      label: Hardware key
+      placeholder: YubiKey 5 NFC / USB AEGISWALL / none
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Audit / service log excerpt
+      description: Redact paths and serial numbers if needed.
+      render: text

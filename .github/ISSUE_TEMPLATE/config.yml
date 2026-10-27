@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/horizonbymuneeb/AegisWall/security/advisories/new
+    about: Report a vulnerability privately. Do not open a public issue.
+  - name: Smart App Control help
+    url: https://github.com/horizonbymuneeb/AegisWall/blob/main/docs/SMART-APP-CONTROL.md
+    about: Unsigned build blocked by Smart App Control? Read this first.
+  - name: Discussions
+    url: https://github.com/horizonbymuneeb/AegisWall/discussions
+    about: Ask questions and share setups.
