@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+﻿$ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $coreDir = Join-Path $root 'src\AegisWall.Core'
 $uiDir = Join-Path $root 'src\AegisWall.UI'
@@ -28,5 +28,7 @@ $references = @(
 
 Add-Type -Path $paths -ReferencedAssemblies $references
 [Environment]::SetEnvironmentVariable('AEGISWALL_PORTABLE', '1', 'Process')
+[Environment]::SetEnvironmentVariable('AEGISWALL_HOME', $root, 'Process')
 [Environment]::CurrentDirectory = $root
 [AegisWall.UI.Program]::Main(@())
+

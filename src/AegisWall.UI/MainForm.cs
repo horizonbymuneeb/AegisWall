@@ -68,6 +68,7 @@ namespace AegisWall.UI
             Font = Theme.UiFont(9f);
             AutoScaleMode = AutoScaleMode.None;
             DoubleBuffered = true;
+            try { string iconPath = Path.Combine(AppHome(), "assets", "app.ico"); if (File.Exists(iconPath)) { Icon = new Icon(iconPath); } } catch { }
 
             LoadData();
             BuildShell();
@@ -1784,6 +1785,13 @@ namespace AegisWall.UI
             }
         }
 
+        private static string AppHome()
+        {
+            string home = Environment.GetEnvironmentVariable("AEGISWALL_HOME");
+            if (!string.IsNullOrEmpty(home) && Directory.Exists(home)) { return home; }
+            return AppDomain.CurrentDomain.BaseDirectory;
+        }
+
         private void RunCli(string arguments)
         {
             if (demo)
@@ -1792,9 +1800,19 @@ namespace AegisWall.UI
                 return;
             }
 
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string baseDir = AppHome();
             string cli = Path.Combine(baseDir, "AegisWall.Cli.exe");
             string portableCli = Path.Combine(baseDir, "Run-AegisWall-Cli.ps1");
+            if (!File.Exists(cli) && !File.Exists(portableCli))
+            {
+                string current = Environment.CurrentDirectory;
+                if (File.Exists(Path.Combine(current, "AegisWall.Cli.exe")) || File.Exists(Path.Combine(current, "Run-AegisWall-Cli.ps1")))
+                {
+                    baseDir = current;
+                    cli = Path.Combine(baseDir, "AegisWall.Cli.exe");
+                    portableCli = Path.Combine(baseDir, "Run-AegisWall-Cli.ps1");
+                }
+            }
             bool portable = string.Equals(Environment.GetEnvironmentVariable("AEGISWALL_PORTABLE"), "1", StringComparison.Ordinal)
                 || File.Exists(Path.Combine(baseDir, "portable.mode"));
 
@@ -1882,6 +1900,7 @@ namespace AegisWall.UI
         }
     }
 }
+
 
 
 

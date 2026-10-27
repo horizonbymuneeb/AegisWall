@@ -33,6 +33,7 @@ try {
 
     Add-Type -Path $paths -ReferencedAssemblies $references
     [Environment]::SetEnvironmentVariable('AEGISWALL_PORTABLE', '1', 'Process')
+[Environment]::SetEnvironmentVariable('AEGISWALL_HOME', $root, 'Process')
     [Environment]::CurrentDirectory = $root
     if ($Console) {
         [AegisWall.Service.Program]::Main(@("--console"))
@@ -48,4 +49,5 @@ catch {
     }
     throw
 }
+
 

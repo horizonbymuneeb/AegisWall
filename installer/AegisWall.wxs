@@ -11,13 +11,15 @@
              InstallScope="perMachine"
              Platform="x64"
              SummaryCodepage="1252" />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of $(var.ProductName) is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <Property Id="PORTABLE" Value="$(var.Portable)" />
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
     <Property Id="ARPCOMMENTS" Value="Hardware-anchored application firewall and network killswitch." />
     <Property Id="ARPHELPLINK" Value="https://github.com/horizonbymuneeb/AegisWall" />
+    <Icon Id="AegisWallIcon" SourceFile="$(var.StageDir)\assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AegisWallIcon" />
 
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
@@ -61,4 +63,7 @@
     </InstallExecuteSequence>
   </Product>
 </Wix>
+
+
+
 

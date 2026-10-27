@@ -210,6 +210,8 @@ try {
             $link.TargetPath = $target
             $link.WorkingDirectory = $InstallDir
             $link.Description = 'Hardware-anchored application firewall'
+            $icon = Join-Path $InstallDir 'assets\app.ico'
+            if (Test-Path -LiteralPath $icon) { $link.IconLocation = "$icon,0" }
             $link.Save()
         }
     }

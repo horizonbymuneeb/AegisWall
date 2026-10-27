@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -24,7 +24,9 @@ namespace AegisWall.UI
                 else if (string.Equals(args[i], "--out", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length) { output = args[++i]; }
             }
 
-            string iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "icons");
+            string home = Environment.GetEnvironmentVariable("AEGISWALL_HOME");
+            if (string.IsNullOrEmpty(home)) { home = AppDomain.CurrentDomain.BaseDirectory; }
+            string iconDirectory = Path.Combine(home, "assets", "icons");
             if (!Directory.Exists(iconDirectory))
             {
                 iconDirectory = Path.Combine(Environment.CurrentDirectory, "assets", "icons");
@@ -94,3 +96,4 @@ namespace AegisWall.UI
         }
     }
 }
+

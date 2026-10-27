@@ -1,4 +1,4 @@
-param(
+﻿param(
     [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$Remaining
 )
@@ -29,7 +29,9 @@ $references = @(
 
 Add-Type -Path $paths -ReferencedAssemblies $references
 [Environment]::SetEnvironmentVariable('AEGISWALL_PORTABLE', '1', 'Process')
+[Environment]::SetEnvironmentVariable('AEGISWALL_HOME', $root, 'Process')
 [Environment]::CurrentDirectory = $root
 if ($null -eq $Remaining) { $Remaining = @() }
 $exitCode = [AegisWall.Cli.Program]::Main($Remaining)
 exit $exitCode
+

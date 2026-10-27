@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$Test,
     [switch]$NoClean
@@ -45,6 +45,8 @@ $uiRefs = @(
     "/r:$wpfDir\PresentationCore.dll",
     "/r:$wpfDir\WindowsBase.dll"
 )
+$uiIcon = Join-Path $root 'assets\app.ico'
+if (Test-Path -LiteralPath $uiIcon) { $uiRefs += "/win32icon:$uiIcon" }
 
 function Invoke-Csc {
     param(
@@ -90,4 +92,5 @@ if ($Test) {
         throw "Tests failed."
     }
 }
+
 

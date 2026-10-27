@@ -34,7 +34,9 @@ namespace AegisWall.UI
             BackColor = Theme.Bg;
             Font = Theme.UiFont(9f);
             AutoScaleMode = AutoScaleMode.None;
-            string iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "icons");
+            string home = Environment.GetEnvironmentVariable("AEGISWALL_HOME");
+            if (string.IsNullOrEmpty(home)) { home = AppDomain.CurrentDomain.BaseDirectory; }
+            string iconDirectory = Path.Combine(home, "assets", "icons");
             if (Directory.Exists(iconDirectory)) { Icons.Initialize(iconDirectory); }
 
             Label title = new Label();
@@ -315,6 +317,7 @@ namespace AegisWall.UI
         }
     }
 }
+
 
 
 
