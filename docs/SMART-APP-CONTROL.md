@@ -73,10 +73,10 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 If Smart App Control blocks the MSI itself, use the ZIP release and run `AegisWall-Portable.bat` (or `Run-AegisWall.ps1`) directly. The launcher uses the signed PowerShell host.
 
-The portable service is installed as:
+Portable mode installs the core as a SYSTEM scheduled task (`AegisWall Core`):
 
 ```text
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "...\Run-AegisWall-Service.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "...\Run-AegisWall-Service.ps1" -Console
 ```
 
 Trade-offs:
@@ -183,5 +183,6 @@ Get-ChildItem Cert:\LocalMachine\Root, Cert:\LocalMachine\TrustedPublisher |
 - It does not promise that an unsigned build will run on every Windows 11 PC.
 
 If SAC blocks the installer or the EXEs, use **portable mode** or a **signed release**.
+
 
 

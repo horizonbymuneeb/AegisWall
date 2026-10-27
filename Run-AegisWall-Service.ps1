@@ -1,3 +1,7 @@
+﻿param(
+    [switch]$Console
+)
+
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $dataDir = Join-Path $env:ProgramData 'AegisWall'
@@ -30,7 +34,12 @@ try {
     Add-Type -Path $paths -ReferencedAssemblies $references
     [Environment]::SetEnvironmentVariable('AEGISWALL_PORTABLE', '1', 'Process')
     [Environment]::CurrentDirectory = $root
-    [AegisWall.Service.Program]::Main(@())
+    if ($Console) {
+        [AegisWall.Service.Program]::Main(@("--console"))
+    }
+    else {
+        [AegisWall.Service.Program]::Main(@())
+    }
 }
 catch {
     try {
@@ -39,3 +48,4 @@ catch {
     }
     throw
 }
+

@@ -1,4 +1,4 @@
-# Architecture
+﻿# Architecture
 
 AegisWall is a user-mode control plane over **Windows Filtering Platform (WFP)**. The actual packet classification happens inside the Windows kernel (BFE/WFP). AegisWall does **not** ship a custom `.sys` driver in 0.1.0.
 
@@ -245,7 +245,7 @@ The app does **not** patch `netsh`, Windows Firewall rules, LSPs, NDIS, or kerne
 | `%ProgramData%\AegisWall\config.json` | Signed policy, allowlist, key vault blobs |
 | `%ProgramData%\AegisWall\status.json` | Read-only UI status |
 | `%ProgramData%\AegisWall\audit.jsonl` | Hash-chained audit events |
-| `%ProgramData%\AegisWall\service-bootstrap.log` | Portable service compile/start errors |
+| `%ProgramData%\AegisWall\service-bootstrap.log` | Portable core task compile/start errors |
 | `C:\Program Files\AegisWall` | Binaries, source (portable), docs, scripts |
 
 ## Security invariants
@@ -265,3 +265,4 @@ The app does **not** patch `netsh`, Windows Firewall rules, LSPs, NDIS, or kerne
 - USB key uses DPAPI machine scope.
 - System DNS is allowed through `svchost.exe`; pinned mode narrows the destination.
 - Automatic trigger detection needs the Filtering Platform audit policy.
+

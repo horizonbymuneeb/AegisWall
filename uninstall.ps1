@@ -28,6 +28,7 @@ $taskName = 'AegisWall Watchdog'
 $dataDir = Join-Path $env:ProgramData 'AegisWall'
 
 try {
+    Stop-ScheduledTask -TaskName 'AegisWall Core' -ErrorAction SilentlyContinue
     $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
     if ($service -and $service.Status -ne 'Stopped') {
         Stop-Service -Name $serviceName -Force
@@ -74,6 +75,7 @@ catch {
 }
 
 try {
+    Unregister-ScheduledTask -TaskName 'AegisWall Core' -Confirm:$false -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $taskName -Confirm:$false -ErrorAction SilentlyContinue
 }
 catch {
@@ -103,4 +105,6 @@ if (-not $ServiceOnly) {
 }
 
 Write-Host 'AegisWall uninstalled.'
+
+
 

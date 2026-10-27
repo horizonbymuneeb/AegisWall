@@ -1,4 +1,4 @@
-# Test lab
+﻿# Test lab
 
 The Test lab is for the "I will install it on a spare laptop and test it" workflow. It gives you safe, repeatable containment tests without weakening enforcement.
 
@@ -10,7 +10,7 @@ Test mode **does not** disable WFP filters or open the network. It only:
 
 ## Open it
 
-UI → **Test lab**.
+UI â†’ **Test lab**.
 
 The checklist shows:
 
@@ -67,13 +67,23 @@ If the beacon connects, check:
 
 ### Service stop
 
+Compiled mode:
+
 ```powershell
 Stop-Service AegisWall
 C:\Temp\AegisWallTest\beacon.exe https://example.com
 Start-Service AegisWall
 ```
 
-Expected: beacon remains blocked; watchdog restarts the service within a minute.
+Portable mode:
+
+```powershell
+Stop-ScheduledTask -TaskName 'AegisWall Core'
+C:\Temp\AegisWallTest\beacon.exe https://example.com
+Start-ScheduledTask -TaskName 'AegisWall Core'
+```
+
+Expected: beacon remains blocked; the watchdog starts the core task again within a minute.
 
 ### Key removal
 
@@ -104,3 +114,6 @@ UI: **Export report**. CLI: `test-report <file>`.
 - Real malware only in an isolated VM; AegisWall is not antivirus.
 - Test mode still blocks the network; do not expect it to be a "no enforcement" sandbox.
 - Record known gaps: admin filter deletion, injection into an allowed app, DNS tunneling, path replacement, ransomware file encryption.
+
+
+

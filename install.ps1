@@ -109,30 +109,41 @@ if ($Portable) {
 & icacls.exe $dataDir /inheritance:r /grant:r 'SYSTEM:(OI)(CI)F' 'Administrators:(OI)(CI)F' 'Users:(OI)(CI)R' | Out-Null
 
 $serviceName = 'AegisWall'
+$coreTaskName = 'AegisWall Core'
 $existing = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
 if ($existing) {
     Write-Host 'Stopping existing AegisWall service...'
-    Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 1
+    try { Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue } catch { }
     & sc.exe delete $serviceName | Out-Null
-    Start-Sleep -Seconds 1
+    $removed = $false
+    for ($i = 0; $i -lt 40; $i++) {
+        Start-Sleep -Milliseconds 500
+        $check = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+        if (-not $check) { $removed = $true; break }
+    }
+    if (-not $removed) {
+        throw 'The existing AegisWall service is still marked for deletion. Reboot the PC, then run the installer again.'
+    }
 }
 
-if ($Portable) {
-    $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-    $binary = '"' + $powershell + '" -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $InstallDir 'Run-AegisWall-Service.ps1') + '"'
-    New-Service -Name $serviceName -BinaryPathName $binary -DisplayName 'AegisWall' -Description 'Hardware-anchored application firewall and network killswitch.' -StartupType Automatic | Out-Null
-} else {
-    $binary = '"' + (Join-Path $InstallDir 'AegisWall.Service.exe') + '"'
-    New-Service -Name $serviceName -BinaryPathName $binary -DisplayName 'AegisWall' -Description 'Hardware-anchored application firewall and network killswitch.' -StartupType Automatic | Out-Null
-}
+Unregister-ScheduledTask -TaskName $coreTaskName -Confirm:$false -ErrorAction SilentlyContinue
 
-& sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/10000/restart/30000 | Out-Null
-try {
-    & sc.exe sdset $serviceName 'D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)' | Out-Null
-}
-catch {
-    Write-Warning 'Could not apply the service DACL.'
+if (-not $Portable) {
+    try {
+        $binary = '"' + (Join-Path $InstallDir 'AegisWall.Service.exe') + '"'
+        New-Service -Name $serviceName -BinaryPathName $binary -DisplayName 'AegisWall' -Description 'Hardware-anchored application firewall and network killswitch.' -StartupType Automatic | Out-Null
+    }
+    catch {
+        throw "Could not create the AegisWall service: $($_.Exception.Message)"
+    }
+
+    & sc.exe failure $serviceName reset= 86400 actions= restart/5000/restart/10000/restart/30000 | Out-Null
+    try {
+        & sc.exe sdset $serviceName 'D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)' | Out-Null
+    }
+    catch {
+        Write-Warning 'Could not apply the service DACL.'
+    }
 }
 
 $taskName = 'AegisWall Watchdog'
@@ -160,24 +171,36 @@ catch {
 }
 
 try {
-    Start-Service -Name $serviceName
-    Start-Sleep -Seconds 2
-    $service = Get-Service -Name $serviceName
-    Write-Host ("Service status: " + $service.Status)
-    if ($ServiceOnly -and $service.Status -ne 'Running') {
-        throw "AegisWall service status is $($service.Status). Check the service log and Smart App Control settings."
+    if ($Portable) {
+        $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $coreAction = New-ScheduledTaskAction -Execute $powershell -Argument ('-NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $InstallDir 'Run-AegisWall-Service.ps1') + '" -Console')
+        $coreTrigger = New-ScheduledTaskTrigger -AtStartup
+        Register-ScheduledTask -TaskName $coreTaskName -Action $coreAction -Trigger $coreTrigger -User 'SYSTEM' -RunLevel Highest -Force | Out-Null
+        Start-ScheduledTask -TaskName $coreTaskName
+        Start-Sleep -Seconds 6
+        $coreTask = Get-ScheduledTask -TaskName $coreTaskName -ErrorAction Stop
+        Write-Host ("Core task status: " + $coreTask.State)
+        if ($ServiceOnly -and $coreTask.State -ne 'Running') {
+            throw "AegisWall Core task status is $($coreTask.State). Check $dataDir\service-bootstrap.log."
+        }
+    }
+    else {
+        Start-Service -Name $serviceName
+        Start-Sleep -Seconds 2
+        $service = Get-Service -Name $serviceName
+        Write-Host ("Service status: " + $service.Status)
+        if ($ServiceOnly -and $service.Status -ne 'Running') {
+            throw "AegisWall service status is $($service.Status). Check the service log and Smart App Control settings."
+        }
     }
 }
 catch {
-    Write-Warning "Service did not start: $($_.Exception.Message)"
-    if ($Portable) {
-        Write-Host "Check $dataDir\service-bootstrap.log"
-    }
+    Write-Warning "AegisWall did not start: $($_.Exception.Message)"
+    Write-Host "Check $dataDir\service-bootstrap.log"
     if ($ServiceOnly) {
         throw
     }
 }
-
 try {
     $target = if ($Portable) { Join-Path $InstallDir 'AegisWall-Portable.bat' } else { Join-Path $InstallDir 'AegisWall.UI.exe' }
     $shell = New-Object -ComObject WScript.Shell
@@ -211,6 +234,8 @@ Write-Host '  3. Arm protection.'
 Write-Host 'Recovery code ko offline save karein.'
 
 if ($transcript) { try { Stop-Transcript | Out-Null } catch { } }
+
+
 
 
 

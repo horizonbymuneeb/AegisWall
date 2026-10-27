@@ -674,14 +674,29 @@ namespace AegisWall.Cli
                         service.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
                     }
                 }
-                return IpcClient.IsServiceReachable();
             }
-            catch (Exception ex)
+            catch
             {
-                Console.Error.WriteLine("AegisWall service is not installed or could not start: " + ex.Message);
-                Console.Error.WriteLine("Run install.ps1 as administrator first.");
-                return false;
             }
+
+            if (IpcClient.IsServiceReachable())
+            {
+                return true;
+            }
+
+            ProcessRunner.Run("schtasks.exe", "/Run /TN \"AegisWall Core\"", 15000);
+            for (int i = 0; i < 40; i++)
+            {
+                Thread.Sleep(500);
+                if (IpcClient.IsServiceReachable())
+                {
+                    return true;
+                }
+            }
+
+            Console.Error.WriteLine("AegisWall service or 'AegisWall Core' task is not running.");
+            Console.Error.WriteLine("Run install.ps1 as administrator first, or start the AegisWall Core task.");
+            return false;
         }
 
         private static void StopService()
@@ -700,6 +715,9 @@ namespace AegisWall.Cli
             catch
             {
             }
+
+            ProcessRunner.Run("schtasks.exe", "/End /TN \"AegisWall Core\"", 15000);
+            Thread.Sleep(1000);
         }
 
         private static void TryReloadService()
@@ -823,6 +841,7 @@ namespace AegisWall.Cli
         }
     }
 }
+
 
 
 

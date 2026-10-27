@@ -110,7 +110,7 @@ Launch:
 C:\Program Files\AegisWall\AegisWall-Portable.bat
 ```
 
-Portable mode runs the UI, CLI and service through the signed PowerShell host. If the portable MSI itself is blocked, use the ZIP release and run `AegisWall-Portable.bat`. It compiles the C# sources in memory at launch. The portable service is registered as a PowerShell-hosted Windows service.
+Portable mode runs the UI, CLI and service through the signed PowerShell host. If the portable MSI itself is blocked, use the ZIP release and run `AegisWall-Portable.bat`. It compiles the C# sources in memory at launch. The core runs as a SYSTEM scheduled task (`AegisWall Core`), not a Windows service, so SCM and SAC service-start issues do not block it.
 
 ### Option D - build from source
 
@@ -243,6 +243,7 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 ## License
 
 MIT (c) 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
 
 
 
