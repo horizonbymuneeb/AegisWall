@@ -223,6 +223,7 @@ Read [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md), [docs/ARCHITECTURE.md](docs/A
 
 - [Architecture and sequence diagrams](docs/ARCHITECTURE.md)
 - [Test plan (MSI, keys, lockdown, tamper, uninstall)](docs/TEST-PLAN.md)
+- [Malware containment testing](docs/MALWARE-TESTING.md)
 - [Smart App Control and signing](docs/SMART-APP-CONTROL.md)
 - [Threat model and limits](docs/THREAT-MODEL.md)
 
@@ -237,6 +238,7 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 ## License
 
 MIT Â© 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
 
 
 

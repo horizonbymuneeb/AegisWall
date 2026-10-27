@@ -49,7 +49,8 @@ $required = @(
     'docs\SMART-APP-CONTROL.md',
     'docs\THREAT-MODEL.md',
     'docs\ARCHITECTURE.md',
-    'docs\TEST-PLAN.md'
+    'docs\TEST-PLAN.md',
+    'docs\MALWARE-TESTING.md'
 )
 
 foreach ($file in $required) {
@@ -85,4 +86,5 @@ if ($failures -gt 0) {
 }
 
 Write-Host 'Validation passed.' -ForegroundColor Green
+
 
