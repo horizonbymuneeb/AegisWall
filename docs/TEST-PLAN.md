@@ -1,4 +1,4 @@
-# AegisWall test plan
+﻿# AegisWall test plan
 
 Use a **spare Windows 11 VM or laptop**. AegisWall changes WFP filters and can lock the network. Keep a recovery path and a snapshot.
 
@@ -32,6 +32,7 @@ For malware/C2/ransomware containment scenarios, see [MALWARE-TESTING.md](MALWAR
 | TC-22 | Security | Non-admin control pipe | Access denied |
 | TC-23 | DNS | Pinned DNS | Only listed resolvers allowed |
 | TC-24 | UI | Inputs, dropdowns, number fields | Rounded fields, no clipping, validation works |
+| TC-25 | Discovery | Discover installed apps | Real Start Menu/registry apps appear with logos; allow selected |
 
 ## 0. Preparation
 
@@ -358,8 +359,16 @@ Check:
 - Custom dropdowns (no native ComboBox look).
 - Number fields with custom up/down chevrons.
 - Toggles for outbound/inbound/enabled.
-- No clipped labels or fields at 1120Ã—880.
+- No clipped labels or fields at 1120Ãƒâ€”880.
 - Validation: number fields clamp; empty search shows empty state.
+
+## TC-25 - Installed app discovery
+
+1. Applications -> **Discover**.
+2. Search for an installed app.
+3. Select it and click **Allow selected**.
+
+Expected: the list is populated from Start Menu, uninstall registry and App Paths (not dummy data), each row has the real EXE icon, and selected apps appear in the allowlist.
 
 ## Logs to collect on failure
 
@@ -373,4 +382,5 @@ msiexec /i .\dist\AegisWall-0.1.0-x64.msi /l*v .\install.log
 ```
 
 Redact serial numbers and paths before sharing.
+
 

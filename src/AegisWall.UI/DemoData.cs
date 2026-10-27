@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using AegisWall.Core;
@@ -40,12 +40,10 @@ namespace AegisWall.UI
             config.KeyEnrolledUtc = DateTime.UtcNow.AddDays(-12).ToString("o", CultureInfo.InvariantCulture);
             config.InstalledUtc = DateTime.UtcNow.AddDays(-12).ToString("o", CultureInfo.InvariantCulture);
             config.ServiceVersion = ProtectionEngine.Version;
-            config.AllowedApps.Add(App("Google Chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe", false));
-            config.AllowedApps.Add(App("Mozilla Firefox", @"C:\Program Files\Mozilla Firefox\firefox.exe", false));
-            config.AllowedApps.Add(App("Visual Studio Code", @"C:\Users\Muneeb\AppData\Local\Programs\Microsoft VS Code\Code.exe", false));
-            config.AllowedApps.Add(App("Slack", @"C:\Users\Muneeb\AppData\Local\slack\slack.exe", false));
-            config.AllowedApps.Add(App("Zoom", @"C:\Users\Muneeb\AppData\Roaming\Zoom\bin\Zoom.exe", true));
-            config.AllowedApps.Add(App("Steam", @"C:\Program Files (x86)\Steam\steam.exe", false));
+            foreach (AllowedApp demoApp in DemoApps())
+            {
+                config.AllowedApps.Add(demoApp);
+            }
             return config;
         }
 
@@ -133,6 +131,52 @@ namespace AegisWall.UI
             return result;
         }
 
+        private static List<AllowedApp> DemoApps()
+        {
+            List<AllowedApp> result = new List<AllowedApp>();
+            try
+            {
+                List<InstalledApp> installed = InstalledAppScanner.Scan();
+                foreach (InstalledApp item in installed)
+                {
+                    if (result.Count >= 6) { break; }
+                    bool inbound = result.Count == 0;
+                    AllowedApp app = App(item.Name, item.Path, inbound);
+                    app.Notes = inbound ? "Inbound allowed" : ("Discovered from " + item.Source);
+                    app.BlockedCount = result.Count == 1 ? 3 : 0;
+                    result.Add(app);
+                }
+            }
+            catch
+            {
+            }
+
+            string[,] fallback = new string[,]
+            {
+                { "Google Chrome", @"C:\Program Files\Google\Chrome\Application\chrome.exe" },
+                { "Mozilla Firefox", @"C:\Program Files\Mozilla Firefox\firefox.exe" },
+                { "Visual Studio Code", @"C:\Users\Muneeb\AppData\Local\Programs\Microsoft VS Code\Code.exe" },
+                { "Slack", @"C:\Users\Muneeb\AppData\Local\slack\slack.exe" },
+                { "Zoom", @"C:\Users\Muneeb\AppData\Roaming\Zoom\bin\Zoom.exe" },
+                { "Steam", @"C:\Program Files (x86)\Steam\steam.exe" }
+            };
+
+            int index = 0;
+            while (result.Count < 6 && index < fallback.GetLength(0))
+            {
+                bool exists = false;
+                foreach (AllowedApp app in result)
+                {
+                    if (PathUtil.Key(app.Path) == PathUtil.Key(fallback[index, 1])) { exists = true; break; }
+                }
+                if (!exists)
+                {
+                    result.Add(App(fallback[index, 0], fallback[index, 1], result.Count == 0));
+                }
+                index++;
+            }
+            return result;
+        }
         private static AllowedApp App(string name, string path, bool inbound)
         {
             AllowedApp app = new AllowedApp();
@@ -162,3 +206,4 @@ namespace AegisWall.UI
         }
     }
 }
+

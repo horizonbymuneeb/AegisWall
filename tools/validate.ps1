@@ -74,7 +74,7 @@ foreach ($icon in $icons) {
     }
 }
 
-foreach ($shot in @('screenshot.png', 'screenshot-apps.png', 'screenshot-lockdown.png', 'screenshot-key.png', 'screenshot-logs.png', 'screenshot-settings.png', 'screenshot-lab.png')) {
+foreach ($shot in @('screenshot.png', 'screenshot-apps.png', 'screenshot-lockdown.png', 'screenshot-key.png', 'screenshot-logs.png', 'screenshot-settings.png', 'screenshot-lab.png', 'screenshot-discover.png')) {
     $path = Join-Path $root "assets\$shot"
     if (-not (Test-Path -LiteralPath $path)) {
         Fail "missing screenshot $shot"
@@ -87,6 +87,7 @@ if ($failures -gt 0) {
 }
 
 Write-Host 'Validation passed.' -ForegroundColor Green
+
 
 
 

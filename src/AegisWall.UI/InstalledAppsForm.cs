@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -34,6 +34,8 @@ namespace AegisWall.UI
             BackColor = Theme.Bg;
             Font = Theme.UiFont(9f);
             AutoScaleMode = AutoScaleMode.None;
+            string iconDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "icons");
+            if (Directory.Exists(iconDirectory)) { Icons.Initialize(iconDirectory); }
 
             Label title = new Label();
             title.Text = "Discover installed apps";
@@ -221,12 +223,9 @@ namespace AegisWall.UI
             };
             rows.Controls.Add(row);
 
-            IconBox icon = new IconBox();
-            icon.GlyphData = Icons.Get("package");
-            icon.BoxColor = Theme.AccentSoft;
-            icon.IconColor = Theme.Accent;
-            icon.IconInset = 6f;
-            icon.CornerRadius = 8;
+            AppIcon icon = new AppIcon();
+            icon.AppPath = app.Path;
+            icon.SetEnabledState(true);
             icon.Size = new Size(30, 30);
             icon.Location = new Point(14, 11);
             row.Controls.Add(icon);
@@ -316,3 +315,6 @@ namespace AegisWall.UI
         }
     }
 }
+
+
+

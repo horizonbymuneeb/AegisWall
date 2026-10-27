@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -58,6 +58,7 @@ namespace AegisWall.UI
         public static void Initialize(string directory)
         {
             iconDirectory = directory;
+            Cache.Clear();
         }
 
         public static string Get(string name)
@@ -99,3 +100,4 @@ namespace AegisWall.UI
         }
     }
 }
+

@@ -1,4 +1,4 @@
-# AegisWall
+﻿# AegisWall
 
 **Hardware-anchored application firewall and network killswitch for Windows 10 and 11.**
 
@@ -180,7 +180,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 ## Screenshots
 
-> Screenshots use demo data. Real mode reads your actual allowlist, installed apps, service status and audit log.
+> Screenshots use sample allowlist data. Real mode reads your actual allowlist, installed apps (with real EXE icons), service status and audit log.
 
 | Applications | Lockdown |
 | --- | --- |
@@ -190,9 +190,9 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 | --- | --- |
 | ![Hardware key](assets/screenshot-key.png) | ![Audit log](assets/screenshot-logs.png) |
 
-| Test lab | Settings |
-| --- | --- |
-| ![Test lab](assets/screenshot-lab.png) | ![Settings](assets/screenshot-settings.png) |
+| Discover installed apps | Test lab | Settings |
+| --- | --- | --- |
+| ![Discover](assets/screenshot-discover.png) | ![Test lab](assets/screenshot-lab.png) | ![Settings](assets/screenshot-settings.png) |
 
 ## Threat model and honest limits
 
@@ -243,6 +243,8 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 ## License
 
 MIT (c) 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
+
 
 
 

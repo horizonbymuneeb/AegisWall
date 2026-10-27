@@ -647,7 +647,12 @@ namespace AegisWall.UI
             parent.Controls.Add(row);
 
             Color nameColor = app.Enabled ? Theme.Text : Theme.Faint;
-            AddIcon(row, "package", 18, 19, 30, app.Enabled ? Theme.AccentSoft : Theme.GraySoft, app.Enabled ? Theme.Accent : Theme.Faint, 6f);
+            AppIcon appIcon = new AppIcon();
+            appIcon.AppPath = app.Path;
+            appIcon.SetEnabledState(app.Enabled);
+            appIcon.Location = new Point(18, 19);
+            appIcon.Size = new Size(30, 30);
+            row.Controls.Add(appIcon);
             NewLabel(row, app.Name, 9.5f, FontStyle.Bold, nameColor, 60, 8, 410, 20, true);
             Label path = NewLabel(row, app.Path, 7.5f, FontStyle.Regular, Theme.Muted, 60, 28, 410, 18, true);
             path.AutoEllipsis = true;
@@ -1877,6 +1882,7 @@ namespace AegisWall.UI
         }
     }
 }
+
 
 
 
