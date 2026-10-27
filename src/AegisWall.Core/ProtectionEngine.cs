@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,7 +9,7 @@ namespace AegisWall.Core
 {
     public sealed class ProtectionEngine : IDisposable
     {
-        public const string Version = "0.1.0";
+        public const string Version = "0.1.1";
 
         private readonly object gate = new object();
         private readonly WfpEngine wfp = new WfpEngine();

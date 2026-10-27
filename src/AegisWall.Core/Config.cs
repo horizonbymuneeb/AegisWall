@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -90,7 +90,7 @@ namespace AegisWall.Core
             LockdownUntilUtc = string.Empty;
             LockdownReason = string.Empty;
             InstalledUtc = string.Empty;
-            ServiceVersion = "0.1.0";
+            ServiceVersion = "0.1.1";
             Signature = string.Empty;
             LastGoodHash = string.Empty;
         }

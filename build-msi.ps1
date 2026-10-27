@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [switch]$SkipBuild,
     [switch]$CompiledOnly,
@@ -78,7 +78,7 @@ function Build-Msi {
         "-dStartGuid=$StartGuid" `
         "-dDesktopGuid=$DesktopGuid" `
         "-dLicenseRtf=$(Join-Path $root 'installer\LICENSE.rtf')" `
-        "-dVersion=0.1.0" `
+        "-dVersion=0.1.1" `
         -out ($work + '\') `
         (Join-Path $root 'installer\AegisWall.wxs') `
         (Join-Path $work 'PayloadFiles.wxs')
@@ -90,7 +90,7 @@ function Build-Msi {
 }
 
 if (-not $PortableOnly) {
-    Build-Msi -FileName 'AegisWall-0.1.0-x64.msi' -ProductName 'AegisWall' -Portable '0' `
+    Build-Msi -FileName 'AegisWall-0.1.1-x64.msi' -ProductName 'AegisWall' -Portable '0' `
         -UpgradeCode '{6F1C2D8A-3B4E-4F5A-9C7D-1E2F3A4B5C60}' `
         -ShortcutTarget 'AegisWall.UI.exe' `
         -StartGuid '{A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D}' `
@@ -98,7 +98,7 @@ if (-not $PortableOnly) {
 }
 
 if (-not $CompiledOnly) {
-    Build-Msi -FileName 'AegisWall-Portable-0.1.0-x64.msi' -ProductName 'AegisWall Portable' -Portable '1' `
+    Build-Msi -FileName 'AegisWall-Portable-0.1.1-x64.msi' -ProductName 'AegisWall Portable' -Portable '1' `
         -UpgradeCode '{7A2D3E9B-4C5F-4A6B-8D8E-2F3A4B5C6D71}' `
         -ShortcutTarget 'AegisWall-Portable.bat' `
         -StartGuid '{C3D4E5F6-A7B8-4C9D-0E1F-2A3B4C5D6E7F}' `

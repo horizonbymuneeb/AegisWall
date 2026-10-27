@@ -39,7 +39,7 @@ jobs:
           foreach ($file in @('install.ps1','uninstall.ps1','Run-AegisWall.ps1','Run-AegisWall-Cli.ps1','Run-AegisWall-Service.ps1','AegisWall-Portable.bat','README.md','LICENSE')) {
             Copy-Item -Path (Join-Path $PWD $file) -Destination $stage -Force
           }
-          $zip = Join-Path $PWD 'dist\AegisWall-0.1.0.zip'
+          $zip = Join-Path $PWD 'dist\AegisWall-0.1.1.zip'
           Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip -Force
 
       - name: Checksums

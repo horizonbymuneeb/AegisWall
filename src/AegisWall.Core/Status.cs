@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 
@@ -50,7 +50,7 @@ namespace AegisWall.Core
             LockdownReason = string.Empty;
             LastEvent = string.Empty;
             UpdatedUtc = string.Empty;
-            ServiceVersion = "0.1.0";
+            ServiceVersion = "0.1.1";
             KeySerial = string.Empty;
             KeyProvider = string.Empty;
             DataDir = string.Empty;

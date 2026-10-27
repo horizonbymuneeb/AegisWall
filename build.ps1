@@ -1,4 +1,4 @@
-﻿[CmdletBinding()]
+[CmdletBinding()]
 param(
     [switch]$Test,
     [switch]$NoClean
@@ -81,7 +81,7 @@ if (Test-Path -LiteralPath $assetsSource) {
     Copy-Item -LiteralPath $assetsSource -Destination $assetsTarget -Recurse -Force
 }
 
-Set-Content -LiteralPath (Join-Path $buildDir 'version.txt') -Value '0.1.0' -Encoding ASCII
+Set-Content -LiteralPath (Join-Path $buildDir 'version.txt') -Value '0.1.1' -Encoding ASCII
 Write-Host ("Build complete: " + $buildDir)
 
 if ($Test) {

@@ -1,4 +1,4 @@
-﻿# AegisWall
+# AegisWall
 
 **Hardware-anchored application firewall and network killswitch for Windows 10 and 11.**
 
@@ -71,13 +71,13 @@ AegisWall service -- WFP ALE filters -- outbound/inbound allowlist
 
 Download one of these from the latest release:
 
-- `AegisWall-0.1.0-x64.msi` - compiled service and UI.
-- `AegisWall-Portable-0.1.0-x64.msi` - PowerShell-hosted mode for Smart App Control PCs.
+- `AegisWall-0.1.1-x64.msi` - compiled service and UI.
+- `AegisWall-Portable-0.1.1-x64.msi` - PowerShell-hosted mode for Smart App Control PCs.
 
 Double-click the MSI, or install silently:
 
 ```powershell
-msiexec /i .\AegisWall-0.1.0-x64.msi /l*v install.log
+msiexec /i .\AegisWall-0.1.1-x64.msi /l*v install.log
 ```
 
 Then launch **AegisWall** from the Start menu or desktop shortcut.

@@ -2,7 +2,26 @@
 
 All notable changes to AegisWall are documented here.
 
-## 0.1.0 — 2026-10-27
+## 0.1.1 - 2026-10-27
+
+### Fixed
+
+- Portable mode now runs the core as a SYSTEM scheduled task (`AegisWall Core`) instead of a PowerShell-hosted Windows service. This fixes MSI failures caused by SCM/service start timeouts and Smart App Control.
+- The compiled MSI automatically switches to portable task mode when Smart App Control is on.
+- MSI installs write `%ProgramData%\AegisWall\msi-install.log`.
+- Existing services are removed with a wait loop before reinstall.
+
+### Added
+
+- Real installed application discovery from Start Menu, uninstall registry and App Paths.
+- Real EXE icons in the allowlist and discovery dialog.
+- Test lab with test mode, safe beacon test, checklist and JSON report.
+- Malware containment test playbook.
+- MSI and portable MSI installers.
+
+
+
+## 0.1.0 - 2026-10-27
 
 Initial MVP.
 
@@ -23,3 +42,4 @@ Initial MVP.
 - WinForms light-theme UI with custom rounded inputs, dropdowns, number fields
   and audit rows.
 - GitHub CI, issue templates and validation script.
+

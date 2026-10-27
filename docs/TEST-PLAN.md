@@ -1,4 +1,4 @@
-﻿# AegisWall test plan
+# AegisWall test plan
 
 Use a **spare Windows 11 VM or laptop**. AegisWall changes WFP filters and can lock the network. Keep a recovery path and a snapshot.
 
@@ -40,8 +40,8 @@ For malware/C2/ransomware containment scenarios, see [MALWARE-TESTING.md](MALWAR
 2. Confirm the build:
 
 ```powershell
-Get-FileHash .\dist\AegisWall-0.1.0-x64.msi -Algorithm SHA256
-Get-FileHash .\dist\AegisWall-Portable-0.1.0-x64.msi -Algorithm SHA256
+Get-FileHash .\dist\AegisWall-0.1.1-x64.msi -Algorithm SHA256
+Get-FileHash .\dist\AegisWall-Portable-0.1.1-x64.msi -Algorithm SHA256
 ```
 
 3. Check SAC:
@@ -56,7 +56,7 @@ Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy' `
 ## TC-01 - Compiled MSI
 
 ```powershell
-msiexec /i .\dist\AegisWall-0.1.0-x64.msi /l*v .\install-compiled.log
+msiexec /i .\dist\AegisWall-0.1.1-x64.msi /l*v .\install-compiled.log
 ```
 
 Verify:
@@ -79,7 +79,7 @@ If SAC is on, expect a block/failure; use TC-02 or a signed build.
 ## TC-02 - Portable MSI
 
 ```powershell
-msiexec /i .\dist\AegisWall-Portable-0.1.0-x64.msi /l*v .\install-portable.log
+msiexec /i .\dist\AegisWall-Portable-0.1.1-x64.msi /l*v .\install-portable.log
 ```
 
 Verify:
@@ -316,7 +316,7 @@ Tamper test (on a copy/VM): edit a line in `audit.jsonl`; verify reports the bro
 ## TC-21 - Uninstall
 
 ```powershell
-msiexec /x .\dist\AegisWall-0.1.0-x64.msi /l*v .\uninstall.log
+msiexec /x .\dist\AegisWall-0.1.1-x64.msi /l*v .\uninstall.log
 ```
 
 Expected:
@@ -378,7 +378,7 @@ Get-ScheduledTask -TaskName 'AegisWall Watchdog' | Format-List *
 Get-Content 'C:\ProgramData%\AegisWall\audit.jsonl' -Tail 50
 Get-Content 'C:\ProgramData%\AegisWall\service-bootstrap.log' -Tail 50 -ErrorAction SilentlyContinue
 Get-WinEvent -FilterHashtable @{LogName='Security'; Id=5157} -MaxEvents 20
-msiexec /i .\dist\AegisWall-0.1.0-x64.msi /l*v .\install.log
+msiexec /i .\dist\AegisWall-0.1.1-x64.msi /l*v .\install.log
 ```
 
 Redact serial numbers and paths before sharing.

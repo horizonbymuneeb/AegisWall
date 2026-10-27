@@ -1,4 +1,4 @@
-﻿# Smart App Control (SAC) and AegisWall
+# Smart App Control (SAC) and AegisWall
 
 AegisWall is open source and, by default, the downloaded EXEs are **not code-signed**. Windows 11 **Smart App Control** blocks unsigned or untrusted executables. That is a Windows security decision, not an AegisWall bug. There is no per-app "allow" button inside Smart App Control.
 
@@ -13,14 +13,14 @@ The latest compiled MSI detects SAC and automatically switches to the portable P
 1. Open `%ProgramData%\AegisWall\msi-install.log`.
 2. Run the MSI with logging:
    ```powershell
-   msiexec /i .\AegisWall-0.1.0-x64.msi /l*v install.log
+   msiexec /i .\AegisWall-0.1.1-x64.msi /l*v install.log
    ```
 3. Remove a stale service and retry:
    ```powershell
    sc.exe stop AegisWall
    sc.exe delete AegisWall
    ```
-4. Or use `AegisWall-Portable-0.1.0-x64.msi`, or the ZIP + `AegisWall-Portable.bat`.
+4. Or use `AegisWall-Portable-0.1.1-x64.msi`, or the ZIP + `AegisWall-Portable.bat`.
 
 ## Check whether SAC is on
 
