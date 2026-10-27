@@ -1,8 +1,26 @@
-# Smart App Control (SAC) and AegisWall
+﻿# Smart App Control (SAC) and AegisWall
 
 AegisWall is open source and, by default, the downloaded EXEs are **not code-signed**. Windows 11 **Smart App Control** blocks unsigned or untrusted executables. That is a Windows security decision, not an AegisWall bug. There is no per-app "allow" button inside Smart App Control.
 
 This page explains the supported options, the trade-offs, and the exact steps for users and maintainers.
+
+## MSI error: "A program run as part of the setup did not finish"
+
+This usually means the MSI custom action could not start the service, often because Smart App Control blocked `AegisWall.Service.exe`.
+
+The latest compiled MSI detects SAC and automatically switches to the portable PowerShell-hosted service. If you still see the error:
+
+1. Open `%ProgramData%\AegisWall\msi-install.log`.
+2. Run the MSI with logging:
+   ```powershell
+   msiexec /i .\AegisWall-0.1.0-x64.msi /l*v install.log
+   ```
+3. Remove a stale service and retry:
+   ```powershell
+   sc.exe stop AegisWall
+   sc.exe delete AegisWall
+   ```
+4. Or use `AegisWall-Portable-0.1.0-x64.msi`, or the ZIP + `AegisWall-Portable.bat`.
 
 ## Check whether SAC is on
 
@@ -165,4 +183,5 @@ Get-ChildItem Cert:\LocalMachine\Root, Cert:\LocalMachine\TrustedPublisher |
 - It does not promise that an unsigned build will run on every Windows 11 PC.
 
 If SAC blocks the installer or the EXEs, use **portable mode** or a **signed release**.
+
 

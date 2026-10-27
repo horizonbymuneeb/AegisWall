@@ -96,7 +96,7 @@ Then launch **AegisWall** from the Start menu or desktop shortcut.
 5. Enroll a YubiKey or USB key, add apps, then arm protection.
 
 > [!IMPORTANT]
-> Unsigned builds can be blocked by **Smart App Control**. Use the portable MSI or `.\install.ps1 -Portable`, or ship a signed release. See [docs/SMART-APP-CONTROL.md](docs/SMART-APP-CONTROL.md).
+> Unsigned builds can be blocked by **Smart App Control**. The compiled MSI detects SAC and switches to the portable PowerShell-hosted service automatically. If the MSI itself is blocked, use the portable MSI or ZIP. See [docs/SMART-APP-CONTROL.md](docs/SMART-APP-CONTROL.md).
 
 ### Option C - portable mode from source (SAC-safe)
 
@@ -243,6 +243,7 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 ## License
 
 MIT (c) 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
 
 
 

@@ -31,16 +31,32 @@ function Get-SacState {
 
 Assert-Administrator
 
+$transcript = $false
+if ($ServiceOnly) {
+    try {
+        $logDir = Join-Path $env:ProgramData 'AegisWall'
+        New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+        Start-Transcript -Path (Join-Path $logDir 'msi-install.log') -Append | Out-Null
+        $transcript = $true
+    } catch {
+    }
+}
+
 $sacState = Get-SacState
 if ($sacState -eq 1 -or $sacState -eq 2) {
     Write-Warning "Smart App Control is ON (state $sacState). Unsigned AegisWall EXEs may be blocked."
-    Write-Host 'Recommended: use -Portable. It runs the UI/CLI/service through the signed PowerShell host.'
+    Write-Host 'AegisWall will use the portable PowerShell-hosted mode so the service is not blocked.'
     Write-Host 'See docs\SMART-APP-CONTROL.md for the full explanation and signed-release options.'
-    if (-not $Portable -and -not $Force) {
-        $answer = Read-Host 'Continue with the unsigned EXE install anyway? [y/N]'
-        if ($answer -notmatch '^[yY]') {
-            Write-Host 'Cancelled. Re-run with: .\install.ps1 -Portable'
-            return
+    if (-not $Portable) {
+        if ($ServiceOnly -or $Force) {
+            $Portable = [switch]$true
+            Write-Host 'Smart App Control is on; switching to portable mode.'
+        }
+        else {
+            $answer = Read-Host 'Use portable mode instead of unsigned EXEs? [Y/n]'
+            if ($answer -notmatch '^[nN]') {
+                $Portable = [switch]$true
+            }
         }
     }
 }
@@ -193,6 +209,10 @@ Write-Host '  1. Enroll a YubiKey or USB key.'
 Write-Host '  2. Add your applications to the allowlist.'
 Write-Host '  3. Arm protection.'
 Write-Host 'Recovery code ko offline save karein.'
+
+if ($transcript) { try { Stop-Transcript | Out-Null } catch { } }
+
+
 
 
 
