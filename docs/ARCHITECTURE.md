@@ -1,4 +1,4 @@
-﻿# Architecture
+# Architecture
 
 AegisWall is a user-mode control plane over **Windows Filtering Platform (WFP)**. The actual packet classification happens inside the Windows kernel (BFE/WFP). AegisWall does **not** ship a custom `.sys` driver in 0.1.0.
 
@@ -137,7 +137,7 @@ sequenceDiagram
     S->>S: fail-closed until unlocked
 ```
 
-## Blocked attempt â†’ lockdown
+## Blocked attempt -> lockdown
 
 ```mermaid
 sequenceDiagram

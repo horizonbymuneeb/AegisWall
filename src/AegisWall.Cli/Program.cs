@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using AegisWall.Core;
 
 namespace AegisWall.Cli
@@ -22,7 +23,7 @@ namespace AegisWall.Cli
 
             string command = args[0].Trim().ToLowerInvariant();
             bool requiresAdmin = command != "status" && command != "help" && command != "--help" && command != "-h"
-                && command != "version" && command != "--version" && command != "watchdog";
+                && command != "version" && command != "--version" && command != "watchdog" && command != "installed";
 
             if (requiresAdmin && !PathUtil.IsAdmin())
             {
@@ -84,6 +85,14 @@ namespace AegisWall.Cli
                         return SendCommand("key-status", null);
                     case "reset":
                         return Reset(args);
+                    case "installed":
+                        return Installed(args);
+                    case "test-mode":
+                        return TestModeCommand(args);
+                    case "test-beacon":
+                        return TestBeacon();
+                    case "test-report":
+                        return TestReport(args);
                     case "watchdog":
                         return Watchdog();
                     default:
@@ -427,6 +436,119 @@ namespace AegisWall.Cli
             return fallback;
         }
 
+        private static int Installed(string[] args)
+        {
+            List<InstalledApp> apps = InstalledAppScanner.Scan();
+            if (args.Length > 1 && string.Equals(args[1], "--json", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine(Json.Serialize(apps));
+                return 0;
+            }
+            foreach (InstalledApp app in apps)
+            {
+                Console.WriteLine(app.Name + " | " + app.Path + " | " + app.Source);
+            }
+            Console.WriteLine(apps.Count + " apps");
+            return 0;
+        }
+        private static int TestModeCommand(string[] args)
+        {
+            if (args.Length < 2)
+            {
+                Console.Error.WriteLine("Usage: aegiswall test-mode on|off");
+                return 2;
+            }
+            string value = args[1].Trim().ToLowerInvariant();
+            if (value != "on" && value != "off")
+            {
+                Console.Error.WriteLine("Usage: aegiswall test-mode on|off");
+                return 2;
+            }
+            IpcRequest request = new IpcRequest();
+            request.Cmd = "set";
+            request.Payload = "{\"testMode\":" + (value == "on" ? "true" : "false") + "}";
+            return Send(request);
+        }
+
+        private static int TestBeacon()
+        {
+            if (!EnsureServiceRunning()) { return 1; }
+            IpcResponse before = IpcClient.Send(new IpcRequest { Cmd = "status" }, 10000);
+            if (before == null || !before.Ok || before.Status == null)
+            {
+                Console.Error.WriteLine("Could not read service status.");
+                return 1;
+            }
+            if (!before.Status.Armed)
+            {
+                Console.Error.WriteLine("Arm AegisWall before running the beacon test.");
+                return 1;
+            }
+
+            string source = Path.Combine(Environment.SystemDirectory, "curl.exe");
+            if (!File.Exists(source))
+            {
+                Console.Error.WriteLine("curl.exe was not found in System32.");
+                return 1;
+            }
+            string directory = Path.Combine(Path.GetTempPath(), "AegisWallTest");
+            Directory.CreateDirectory(directory);
+            string beacon = Path.Combine(directory, "beacon.exe");
+            File.Copy(source, beacon, true);
+
+            int beforeCount = before.Status.BlockedAttempts;
+            ProcessResult result = ProcessRunner.Run(beacon, "https://example.com --max-time 6 -s -o NUL -w \"%{http_code}\"", 15000);
+            Thread.Sleep(1500);
+            IpcResponse after = IpcClient.Send(new IpcRequest { Cmd = "status" }, 10000);
+            int afterCount = after != null && after.Status != null ? after.Status.BlockedAttempts : beforeCount;
+            bool blocked = afterCount > beforeCount || result.ExitCode != 0;
+            bool lockdown = after != null && after.Status != null && string.Equals(after.Status.State, "Lockdown", StringComparison.OrdinalIgnoreCase);
+            string data = Json.Serialize(new
+            {
+                beacon = beacon,
+                exitCode = result.ExitCode,
+                blocked = blocked,
+                blockedAttemptsBefore = beforeCount,
+                blockedAttemptsAfter = afterCount,
+                lockdown = lockdown,
+                stdout = result.StdOut,
+                stderr = result.StdErr
+            });
+            string message = blocked ? "Beacon blocked by AegisWall" : "Beacon connected; check the allowlist and test setup";
+            WriteLastCommand(blocked, message, data);
+            AuditLog.Append("test.beacon", message + " | " + beacon, "admin");
+            Console.WriteLine(message);
+            Console.WriteLine(data);
+            return blocked ? 0 : 1;
+        }
+
+        private static int TestReport(string[] args)
+        {
+            if (!EnsureServiceRunning()) { return 1; }
+            IpcResponse status = IpcClient.Send(new IpcRequest { Cmd = "status" }, 10000);
+            IpcResponse diagnostics = IpcClient.Send(new IpcRequest { Cmd = "diagnostics" }, 15000);
+            List<AuditEntry> audit = AuditLog.Read(200);
+            object diagnosticData = null;
+            if (diagnostics != null && diagnostics.Ok && !string.IsNullOrEmpty(diagnostics.Data))
+            {
+                diagnosticData = Json.DeserializeObject(diagnostics.Data);
+            }
+
+            string report = Json.Serialize(new
+            {
+                generatedUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
+                status = status == null ? null : status.Status,
+                diagnostics = diagnosticData,
+                audit = audit
+            });
+            string path = args.Length > 1 ? args[1] : Path.Combine(Path.GetTempPath(), "AegisWall-test-report.json");
+            string directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory)) { Directory.CreateDirectory(directory); }
+            File.WriteAllText(path, report, new UTF8Encoding(false));
+            WriteLastCommand(true, "Test report written", Path.GetFullPath(path));
+            Console.WriteLine("Test report: " + Path.GetFullPath(path));
+            return 0;
+        }
         private static int SendCommand(string command, string payload)
         {
             IpcRequest request = new IpcRequest();
@@ -692,8 +814,17 @@ namespace AegisWall.Cli
             Console.WriteLine("  aegiswall verify");
             Console.WriteLine("  aegiswall key-status");
             Console.WriteLine("  aegiswall reload");
+            Console.WriteLine("  aegiswall installed [--json]");
+            Console.WriteLine("  aegiswall test-mode on|off");
+            Console.WriteLine("  aegiswall test-beacon");
+            Console.WriteLine("  aegiswall test-report [file]");
             Console.WriteLine("  aegiswall reset --force");
             Console.WriteLine("  aegiswall watchdog");
         }
     }
 }
+
+
+
+
+

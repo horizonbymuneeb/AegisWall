@@ -1,4 +1,4 @@
-﻿# AegisWall test plan
+# AegisWall test plan
 
 Use a **spare Windows 11 VM or laptop**. AegisWall changes WFP filters and can lock the network. Keep a recovery path and a snapshot.
 
@@ -52,7 +52,7 @@ Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy' `
 
 4. Keep an elevated PowerShell open.
 
-## TC-01 â€” Compiled MSI
+## TC-01 - Compiled MSI
 
 ```powershell
 msiexec /i .\dist\AegisWall-0.1.0-x64.msi /l*v .\install-compiled.log
@@ -75,7 +75,7 @@ Expected:
 
 If SAC is on, expect a block/failure; use TC-02 or a signed build.
 
-## TC-02 â€” Portable MSI
+## TC-02 - Portable MSI
 
 ```powershell
 msiexec /i .\dist\AegisWall-Portable-0.1.0-x64.msi /l*v .\install-portable.log
@@ -97,42 +97,42 @@ C:\Program Files\AegisWall\AegisWall-Portable.bat
 
 Expected: UI opens; first launch takes a few seconds because the C# sources compile in memory.
 
-## TC-03 â€” Smart App Control
+## TC-03 - Smart App Control
 
-1. Turn SAC **On** (Windows Security â†’ App & browser control â†’ Smart App Control).
+1. Turn SAC **On** (Windows Security -> App & browser control -> Smart App Control).
 2. Try the compiled MSI/EXE.
 3. Try the portable MSI/launcher.
 
 Expected:
 
-- Compiled unsigned EXE may be blocked with â€œAn Application Control policy has blocked this fileâ€.
+- Compiled unsigned EXE may be blocked with "An Application Control policy has blocked this file".
 - Portable mode works through the signed PowerShell host.
 - The installer warns before installing unsigned EXEs.
 - `docs/SMART-APP-CONTROL.md` explains signed-release and SAC-off options.
 
 Do **not** change `VerifiedAndReputablePolicyState` manually.
 
-## TC-04 â€” YubiKey enrollment
+## TC-04 - YubiKey enrollment
 
 1. Insert a YubiKey.
-2. UI â†’ Hardware key â†’ **YubiKey** â†’ **Enroll key**.
+2. UI -> Hardware key -> **YubiKey** -> **Enroll key**.
 3. Approve UAC, confirm slot 2 programming, touch the key.
 
 Expected:
 
 - `ykman otp info` shows slot 2 challenge-response.
-- UI shows provider `yubikey`, serial, â€œConnected and enrolledâ€.
+- UI shows provider `yubikey`, serial, "Connected and enrolled".
 - Recovery code is printed once; save it.
 - `config.json` has `keyProvider: "yubikey"`, non-empty `vaultBlob`, `keyChallenge`.
 
 Test wrong key:
 
-- Insert a different YubiKey and click **Unlock now** â†’ error, no policy change.
+- Insert a different YubiKey and click **Unlock now** -> error, no policy change.
 
-## TC-05 â€” USB key enrollment
+## TC-05 - USB key enrollment
 
 1. Format a USB drive, set volume label `AEGISWALL`.
-2. UI â†’ Hardware key â†’ **USB key** â†’ label `AEGISWALL` â†’ **Enroll key**.
+2. UI -> Hardware key -> **USB key** -> label `AEGISWALL` -> **Enroll key**.
 3. Verify `AEGISWALL:\aegiswall.key` exists.
 4. Unlock with the USB inserted.
 5. Copy `aegiswall.key` to another PC and try to unlock.
@@ -143,9 +143,9 @@ Expected:
 - Second PC cannot decrypt (DPAPI machine scope).
 - Removing the USB starts the grace timer.
 
-## TC-06 â€” Arm
+## TC-06 - Arm
 
-UI â†’ Dashboard â†’ **Arm protection**.
+UI -> Dashboard -> **Arm protection**.
 
 Expected:
 
@@ -153,10 +153,10 @@ Expected:
 - `AegisWall.Cli.exe diagnostics` reports `wfpOpen: true`, `filterCount > 0`, `configVerified: true`.
 - `audit.jsonl` gets `arm`.
 
-## TC-07 â€” Allow one app, block another
+## TC-07 - Allow one app, block another
 
 1. Allow `C:\Program Files\Google\Chrome\Application\chrome.exe`.
-2. Browse to `https://example.com` â†’ works.
+2. Browse to `https://example.com` -> works.
 3. Run an unapproved client, for example copy `curl.exe` to `C:\Temp\test-client.exe` and run:
 
 ```powershell
@@ -175,18 +175,18 @@ Get-WinEvent -FilterHashtable @{LogName='Security'; Id=5157} -MaxEvents 5 |
   Format-List TimeCreated, Message
 ```
 
-## TC-08 â€” Per-app toggles
+## TC-08 - Per-app toggles
 
 In Applications:
 
-- Turn **Out** off for Chrome â†’ Chrome cannot connect.
-- Turn **In** on for a server app â†’ inbound filter added.
-- Turn **On** off â†’ all filters for that app removed.
+- Turn **Out** off for Chrome -> Chrome cannot connect.
+- Turn **In** on for a server app -> inbound filter added.
+- Turn **On** off -> all filters for that app removed.
 - Use search and access filters.
 
 Expected: status filter count changes; behavior matches toggles.
 
-## TC-09 â€” Automatic lockdown
+## TC-09 - Automatic lockdown
 
 With trigger mode `User apps only`:
 
@@ -206,20 +206,20 @@ If no trigger: check the audit policy:
 auditpol /get /subcategory:'Filtering Platform Connection'
 ```
 
-## TC-10 â€” Manual lockdown
+## TC-10 - Manual lockdown
 
-UI â†’ Lockdown â†’ **Lock network now** (e.g., 1 minute).
+UI -> Lockdown -> **Lock network now** (e.g., 1 minute).
 
 Expected: immediate `Lockdown`; unlock after timer or **Unlock now**.
 
-## TC-11 â€” Key removal within grace
+## TC-11 - Key removal within grace
 
 1. While protected, remove the USB/YubiKey.
 2. Reinsert within 30 seconds.
 
 Expected: status `Key grace` briefly; no lockdown; audit `key.removed.grace` + `key.returned`.
 
-## TC-12 â€” Key removal past grace
+## TC-12 - Key removal past grace
 
 1. Remove the key and wait longer than the grace period.
 
@@ -229,7 +229,7 @@ Expected:
 - If **Lockdown on key removal** is on, a timer starts.
 - Audit `key.removed`.
 
-## TC-13 â€” Boot without key
+## TC-13 - Boot without key
 
 1. Arm, then reboot without the key.
 
@@ -239,7 +239,7 @@ Expected:
 - Status `KeyLocked`.
 - Insert key and **Unlock now** to restore allowlisted traffic.
 
-## TC-14 â€” Config tampering
+## TC-14 - Config tampering
 
 1. Stop the service (or use a copy).
 2. Edit `%ProgramData%\AegisWall\config.json` (for example add an app).
@@ -247,7 +247,7 @@ Expected:
 
 Expected: `Unverified`; allowlist is not applied; network is blocked. Audit `wfp.error`/verification failure.
 
-## TC-15 â€” Stop service while armed
+## TC-15 - Stop service while armed
 
 ```powershell
 Stop-Service AegisWall
@@ -266,7 +266,7 @@ Restore:
 Start-Service AegisWall
 ```
 
-## TC-16 â€” Reboot while armed
+## TC-16 - Reboot while armed
 
 1. Arm and unlock.
 2. Reboot.
@@ -278,7 +278,7 @@ Expected:
 - UI shows `KeyLocked` until the key is unlocked.
 - No allowlisted traffic before unlock.
 
-## TC-17 â€” Recovery code
+## TC-17 - Recovery code
 
 ```powershell
 AegisWall.Cli.exe disarm --recovery <code>
@@ -286,16 +286,16 @@ AegisWall.Cli.exe disarm --recovery <code>
 
 Expected: disarm succeeds without the key; filters removed; audit `disarm`.
 
-## TC-18 â€” Rotate recovery
+## TC-18 - Rotate recovery
 
-UI â†’ Hardware key â†’ **Rotate code**; save the new code printed in the elevated console.
+UI -> Hardware key -> **Rotate code**; save the new code printed in the elevated console.
 
 Expected:
 
 - Old code fails.
 - New code succeeds.
 
-## TC-19 â€” Export/import
+## TC-19 - Export/import
 
 ```powershell
 AegisWall.Cli.exe export C:\Temp\allowlist.json
@@ -304,15 +304,15 @@ AegisWall.Cli.exe import C:\Temp\allowlist.json --replace
 
 Expected: app list, outbound/inbound/enabled and notes restored.
 
-## TC-20 â€” Audit chain
+## TC-20 - Audit chain
 
-UI â†’ Audit log â†’ **Verify chain**; **Export CSV**.
+UI -> Audit log -> **Verify chain**; **Export CSV**.
 
 Expected: `Chain valid`; CSV contains Time, Event, Actor, Detail.
 
 Tamper test (on a copy/VM): edit a line in `audit.jsonl`; verify reports the broken sequence.
 
-## TC-21 â€” Uninstall
+## TC-21 - Uninstall
 
 ```powershell
 msiexec /x .\dist\AegisWall-0.1.0-x64.msi /l*v .\uninstall.log
@@ -332,7 +332,7 @@ Manual purge:
 .\uninstall.ps1 -Force -PurgeData
 ```
 
-## TC-22 â€” Non-admin pipe
+## TC-22 - Non-admin pipe
 
 As a standard user:
 
@@ -342,15 +342,15 @@ AegisWall.Cli.exe arm
 
 Expected: UAC prompt; if declined, no change. Direct pipe connection from a non-admin should be denied.
 
-## TC-23 â€” Pinned DNS
+## TC-23 - Pinned DNS
 
-1. Settings â†’ DNS mode `Pinned servers` â†’ `1.1.1.1`.
+1. Settings -> DNS mode `Pinned servers` -> `1.1.1.1`.
 2. Allow Chrome; browse.
 3. Change to an unlisted resolver in the OS; DNS should fail.
 
 Expected: only `svchost` DNS to `1.1.1.1:53` is permitted.
 
-## TC-24 â€” UI input design
+## TC-24 - UI input design
 
 Check:
 

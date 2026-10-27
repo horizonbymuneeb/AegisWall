@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -22,6 +22,8 @@ namespace AegisWall.Core
         public List<AllowedApp> AllowedApps { get; set; }
         public string KeyRemovalAction { get; set; }
         public bool WatchdogEnabled { get; set; }
+        public bool TestMode { get; set; }
+        public int TestLockdownSeconds { get; set; }
         public bool AutoStart { get; set; }
         public bool KernelDriverEnabled { get; set; }
         public string WdacPolicyPath { get; set; }
@@ -66,6 +68,8 @@ namespace AegisWall.Core
             AllowedApps = new List<AllowedApp>();
             KeyRemovalAction = "BlockAll";
             WatchdogEnabled = true;
+            TestMode = false;
+            TestLockdownSeconds = 60;
             AutoStart = true;
             KernelDriverEnabled = false;
             WdacPolicyPath = string.Empty;
@@ -174,6 +178,8 @@ namespace AegisWall.Core
             payload["dnsMode"] = config.DnsMode ?? string.Empty;
             payload["keyRemovalAction"] = config.KeyRemovalAction ?? string.Empty;
             payload["watchdogEnabled"] = config.WatchdogEnabled;
+            payload["testMode"] = config.TestMode;
+            payload["testLockdownSeconds"] = config.TestLockdownSeconds;
             payload["autoStart"] = config.AutoStart;
             payload["kernelDriverEnabled"] = config.KernelDriverEnabled;
             payload["wdacPolicyPath"] = config.WdacPolicyPath ?? string.Empty;
@@ -244,3 +250,4 @@ namespace AegisWall.Core
         }
     }
 }
+

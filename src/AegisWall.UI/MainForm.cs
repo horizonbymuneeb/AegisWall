@@ -34,6 +34,8 @@ namespace AegisWall.UI
         private Label monitorLabel;
         private Label filterCountLabel;
         private Label serviceStartedLabel;
+        private Label lastTestLabel;
+        private LastCommandResult lastCommand;
         private Pill statusPill;
         private ProgressLine countdownProgress;
         private Timer refreshTimer;
@@ -108,12 +110,25 @@ namespace AegisWall.UI
                 status = DemoData.Status(initialPage);
                 config = DemoData.Config();
                 audit = DemoData.Audit();
+                lastCommand = DemoData.LastCommand();
             }
             else
             {
                 status = StatusStore.Read();
                 config = ConfigStore.Load();
                 audit = AuditLog.Read(80);
+                lastCommand = null;
+                try
+                {
+                    if (File.Exists(ConfigStore.LastCommandPath))
+                    {
+                        lastCommand = Json.Deserialize<LastCommandResult>(File.ReadAllText(ConfigStore.LastCommandPath));
+                    }
+                }
+                catch
+                {
+                    lastCommand = null;
+                }
                 if (status == null)
                 {
                     status = StatusSnapshot.NotInstalled();
@@ -178,6 +193,7 @@ namespace AegisWall.UI
                 { "lockdown", "Lockdown", "lock" },
                 { "key", "Hardware key", "key" },
                 { "logs", "Audit log", "file-text" },
+                { "lab", "Test lab", "activity" },
                 { "settings", "Settings", "sliders" }
             };
 
@@ -310,6 +326,7 @@ namespace AegisWall.UI
             BuildLockdown();
             BuildKey();
             BuildLogs();
+            BuildTestLab();
             BuildSettings();
             UpdateLive();
             }
@@ -544,12 +561,14 @@ namespace AegisWall.UI
             Panel page = AddPage("apps");
             CardPanel top = AddCard(page, 0, 0, PageWidth, 142);
             NewLabel(top, "Application allowlist", 11f, FontStyle.Bold, Theme.Strong, 24, 18, 0, 0, true);
-            NewLabel(top, "Only these executables can open outbound or inbound connections.", 8.5f, FontStyle.Regular, Theme.Muted, 24, 44, 0, 0, true);
+            NewLabel(top, "Strict outbound and inbound allowlist.", 8.5f, FontStyle.Regular, Theme.Muted, 24, 44, 0, 0, true);
 
             AddButton(top, "Add app", "plus", 640, 22, 156, 38, Theme.Accent, Color.White, Theme.AccentHover, Color.Transparent,
                 delegate { AddApp(); });
             AddButton(top, "Import", "folder-open", 520, 22, 108, 38, Color.White, Theme.Text, Theme.GraySoft, Theme.Border,
                 delegate { ImportApps(); });
+            AddButton(top, "Discover", "folder-open", 300, 22, 100, 38, Color.White, Theme.Text, Theme.GraySoft, Theme.Border,
+                delegate { DiscoverApps(); });
             AddButton(top, "Export", "file-text", 410, 22, 100, 38, Color.White, Theme.Text, Theme.GraySoft, Theme.Border,
                 delegate { ExportApps(); });
 
@@ -608,7 +627,7 @@ namespace AegisWall.UI
                 }
             }
 
-            NewLabel(page, "Path-based allowlisting is enforced by WFP. File hashes and blocked counts are recorded for audit and tamper review.",
+            NewLabel(page, "Discover scans Start Menu, uninstall registry and App Paths. Path-based allowlisting is enforced by WFP.",
                 8f, FontStyle.Regular, Theme.Muted, 0, 156 + cardHeight + 12, PageWidth, 32, false);
         }
 
@@ -702,6 +721,22 @@ namespace AegisWall.UI
                 result.Add(app);
             }
             return result;
+        }
+
+        private void DiscoverApps()
+        {
+            if (demo)
+            {
+                MessageBox.Show(this, "Demo mode: discovery is disabled in screenshots.", "AegisWall", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            using (InstalledAppsForm dialog = new InstalledAppsForm())
+            {
+                if (dialog.ShowDialog(this) == DialogResult.OK && !string.IsNullOrEmpty(dialog.ResultPath))
+                {
+                    RunCli("import " + Quote(dialog.ResultPath));
+                }
+            }
         }
 
         private void ImportApps()
@@ -1172,6 +1207,118 @@ namespace AegisWall.UI
             return "\"" + text.Replace("\"", "\"\"") + "\"";
         }
 
+        private void BuildTestLab()
+        {
+            Panel page = AddPage("lab");
+            CardPanel controls = AddCard(page, 0, 0, PageWidth, 190);
+            NewLabel(controls, "Test lab", 11f, FontStyle.Bold, Theme.Strong, 24, 18, 0, 0, true);
+            NewLabel(controls, "Safe containment tests. WFP filters stay enforced.", 8.5f, FontStyle.Regular, Theme.Muted, 24, 44, 700, 18, true);
+
+            ToggleSwitch testMode = new ToggleSwitch();
+            testMode.Checked = config.TestMode;
+            testMode.Location = new Point(24, 78);
+            testMode.Size = new Size(46, 26);
+            testMode.CheckedChanged += delegate
+            {
+                if (loading) { return; }
+                RunCli("set " + Quote("{\"testMode\":" + (testMode.Checked ? "true" : "false") + "}"));
+            };
+            controls.Controls.Add(testMode);
+            NewLabel(controls, "Test mode", 9.5f, FontStyle.Bold, Theme.Text, 80, 76, 0, 0, true);
+            NewLabel(controls, "Shortens lockdown and tags audit events as TEST.", 7.5f, FontStyle.Regular, Theme.Muted, 80, 96, 360, 18, true);
+
+            NumberBox seconds = new NumberBox();
+            seconds.Minimum = 15;
+            seconds.Maximum = 3600;
+            seconds.Value = Math.Max(15, Math.Min(3600, config.TestLockdownSeconds));
+            seconds.Font = Theme.UiFont(9.5f);
+            seconds.Location = new Point(24, 128);
+            seconds.Size = new Size(96, 34);
+            controls.Controls.Add(seconds);
+            NewLabel(controls, "test lockdown seconds", 8f, FontStyle.Regular, Theme.Muted, 128, 136, 180, 18, true);
+            AddButton(controls, "Save", "", 320, 128, 76, 34, Color.White, Theme.Text, Theme.GraySoft, Theme.Border,
+                delegate { RunCli("set " + Quote("{\"testLockdownSeconds\":" + ((int)seconds.Value).ToString(CultureInfo.InvariantCulture) + "}")); });
+
+            AddButton(controls, "Run beacon test", "activity", 520, 70, 276, 40, Theme.Accent, Color.White, Theme.AccentHover, Color.Transparent,
+                delegate { RunBeaconTest(); });
+            AddButton(controls, "Export report", "file-text", 520, 120, 276, 36, Color.White, Theme.Text, Theme.GraySoft, Theme.Border,
+                delegate { ExportTestReport(); });
+            NewLabel(controls, "Test mode never disables filters. Use an isolated VM for real malware.", 8f, FontStyle.Regular, Theme.Orange, 24, 164, 480, 18, true);
+
+            CardPanel checklist = AddCard(page, 0, 206, PageWidth, 310);
+            NewLabel(checklist, "Test checklist", 11f, FontStyle.Bold, Theme.Strong, 24, 18, 0, 0, true);
+            NewLabel(checklist, "Expected results for the spare-laptop malware lab.", 8.5f, FontStyle.Regular, Theme.Muted, 24, 44, 700, 18, true);
+
+            bool beaconBlocked = lastCommand != null && !string.IsNullOrEmpty(lastCommand.Data)
+                && lastCommand.Data.IndexOf("\"blocked\":true", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool lockdownSeen = status.LockdownCount > 0 || string.Equals(status.State, "Lockdown", StringComparison.OrdinalIgnoreCase);
+            AddLabRow(checklist, 68, "Unapproved beacon blocked", beaconBlocked ? "Last run: blocked by WFP" : "Run the beacon test", beaconBlocked ? "PASS" : "WAIT", beaconBlocked ? Theme.Green : Theme.Orange);
+            AddLabRow(checklist, 104, "Lockdown triggered", status.LockdownCount + " lockdown event(s) recorded", lockdownSeen ? "PASS" : "WAIT", lockdownSeen ? Theme.Green : Theme.Orange);
+            AddLabRow(checklist, 140, "Service stop keeps filters", "Manual: Stop-Service AegisWall, then run the beacon", "MANUAL", Theme.Muted);
+            AddLabRow(checklist, 176, "Key removal grace", "Manual: remove key, reinsert within 30s", "MANUAL", Theme.Muted);
+            AddLabRow(checklist, 212, "Reboot persistence", "Manual: reboot without the key", "MANUAL", Theme.Muted);
+            AddLabRow(checklist, 248, "Config tamper detection", "Manual: edit config.json, then reload", "MANUAL", Theme.Muted);
+            lastTestLabel = NewLabel(checklist, LastTestText(), 8f, FontStyle.Regular, Theme.Muted, 24, 278, 760, 24, true);
+
+            CardPanel commands = AddCard(page, 0, 532, PageWidth, 150);
+            NewLabel(commands, "Commands", 11f, FontStyle.Bold, Theme.Strong, 24, 18, 0, 0, true);
+            NewLabel(commands, "AegisWall.Cli.exe test-mode on", 8.5f, FontStyle.Regular, Theme.Text, 24, 48, 740, 18, true);
+            NewLabel(commands, "AegisWall.Cli.exe test-beacon", 8.5f, FontStyle.Regular, Theme.Text, 24, 70, 740, 18, true);
+            NewLabel(commands, "AegisWall.Cli.exe test-report C:\\Temp\\aegiswall-report.json", 8.5f, FontStyle.Regular, Theme.Text, 24, 92, 740, 18, true);
+            NewLabel(commands, "Portable: Run-AegisWall-Cli.ps1 test-beacon", 8f, FontStyle.Regular, Theme.Muted, 24, 116, 740, 18, true);
+
+            NewLabel(page, "Test mode only shortens the punishment timer; it does not disable filters or open the network.",
+                8f, FontStyle.Regular, Theme.Muted, 0, 696, PageWidth, 30, false);
+        }
+
+        private void AddLabRow(Control parent, int y, string title, string detail, string statusText, Color statusColor)
+        {
+            Color fill = string.Equals(statusText, "PASS", StringComparison.OrdinalIgnoreCase) ? Theme.GreenSoft
+                : (string.Equals(statusText, "MANUAL", StringComparison.OrdinalIgnoreCase) ? Theme.GraySoft : Theme.OrangeSoft);
+            AddIcon(parent, string.Equals(statusText, "PASS", StringComparison.OrdinalIgnoreCase) ? "check" : (string.Equals(statusText, "MANUAL", StringComparison.OrdinalIgnoreCase) ? "activity" : "alert-triangle"),
+                24, y, 24, fill, statusColor, 5f);
+            NewLabel(parent, title, 9f, FontStyle.Bold, Theme.Text, 54, y - 2, 0, 0, true);
+            NewLabel(parent, detail, 7.5f, FontStyle.Regular, Theme.Muted, 54, y + 13, 560, 18, true);
+            AddPill(parent, statusText, fill, statusColor, statusColor, 700, y - 1);
+        }
+
+        private string LastTestText()
+        {
+            if (lastCommand == null)
+            {
+                return "No test run yet. Enable test mode, then run the beacon test.";
+            }
+            return lastCommand.Message + "  |  Run test-report for full details.";
+        }
+
+        private void RunBeaconTest()
+        {
+            if (demo)
+            {
+                MessageBox.Show(this, "Demo mode: beacon test is disabled in screenshots.", "AegisWall", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            RunCli("test-beacon");
+        }
+
+        private void ExportTestReport()
+        {
+            if (demo)
+            {
+                MessageBox.Show(this, "Demo mode: report export is disabled in screenshots.", "AegisWall", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Title = "Export AegisWall test report";
+                dialog.Filter = "JSON files (*.json)|*.json";
+                dialog.FileName = "aegiswall-test-report.json";
+                if (dialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    RunCli("test-report " + Quote(dialog.FileName));
+                }
+            }
+        }
         private void BuildSettings()
         {
             Panel page = AddPage("settings");
@@ -1372,6 +1519,11 @@ namespace AegisWall.UI
             {
                 titleLabel.Text = "Audit log";
                 subtitleLabel.Text = "Tamper-evident event history.";
+            }
+            else if (string.Equals(page, "lab", StringComparison.OrdinalIgnoreCase))
+            {
+                titleLabel.Text = "Test lab";
+                subtitleLabel.Text = "Safe containment tests. Filters stay enforced.";
             }
             else if (string.Equals(page, "settings", StringComparison.OrdinalIgnoreCase))
             {
@@ -1725,6 +1877,13 @@ namespace AegisWall.UI
         }
     }
 }
+
+
+
+
+
+
+
 
 
 

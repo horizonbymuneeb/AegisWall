@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -194,14 +194,14 @@ namespace AegisWall.Core
                     return;
                 }
 
-                DateTime until = DateTime.UtcNow.AddMinutes(config.LockdownMinutes);
+                DateTime until = config.TestMode ? DateTime.UtcNow.AddSeconds(Math.Max(15, config.TestLockdownSeconds)) : DateTime.UtcNow.AddMinutes(config.LockdownMinutes);
                 if (config.LockdownUntil > until)
                 {
                     until = config.LockdownUntil;
                 }
 
                 config.LockdownUntilUtc = until.ToString("o", CultureInfo.InvariantCulture);
-                config.LockdownReason = reason;
+                config.LockdownReason = (config.TestMode ? "[TEST] " : string.Empty) + reason;
                 config.LockdownCount++;
                 lastEvent = "lockdown.trigger";
                 SaveAndApply(vaultKey);
@@ -378,8 +378,8 @@ namespace AegisWall.Core
             if (duration < 1) { duration = 1; }
             if (duration > 1440) { duration = 1440; }
 
-            config.LockdownUntilUtc = DateTime.UtcNow.AddMinutes(duration).ToString("o", CultureInfo.InvariantCulture);
-            config.LockdownReason = "Manual lockdown";
+            config.LockdownUntilUtc = (config.TestMode ? DateTime.UtcNow.AddSeconds(Math.Max(15, config.TestLockdownSeconds)) : DateTime.UtcNow.AddMinutes(duration)).ToString("o", CultureInfo.InvariantCulture);
+            config.LockdownReason = (config.TestMode ? "[TEST] " : string.Empty) + "Manual lockdown";
             config.LockdownCount++;
             lastEvent = "lockdown.manual";
             SaveAndApply(vaultKey);
@@ -577,7 +577,9 @@ namespace AegisWall.Core
                 lastBlockedApp = config.LastBlockedApp,
                 dnsMode = config.DnsMode,
                 kernelDriverEnabled = config.KernelDriverEnabled,
-                wdacPolicyPath = config.WdacPolicyPath
+                wdacPolicyPath = config.WdacPolicyPath,
+                testMode = config.TestMode,
+                testLockdownSeconds = config.TestLockdownSeconds
             });
             response.Status = BuildStatus();
             return response;
@@ -611,7 +613,9 @@ namespace AegisWall.Core
                 estimatedFilters = filters,
                 dnsMode = config.DnsMode,
                 lockdown = config.IsLockdownActive,
-                keyMissing = config.Armed && config.IsKeyEnrolled && vaultKey == null
+                keyMissing = config.Armed && config.IsKeyEnrolled && vaultKey == null,
+                testMode = config.TestMode,
+                testLockdownSeconds = config.TestLockdownSeconds
             });
             response.Status = BuildStatus();
             return response;
@@ -707,6 +711,14 @@ namespace AegisWall.Core
             if (patch.ContainsKey("allowSystemDns")) { config.AllowSystemDns = Convert.ToBoolean(patch["allowSystemDns"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("requireKeyAtBoot")) { config.RequireKeyAtBoot = Convert.ToBoolean(patch["requireKeyAtBoot"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("watchdogEnabled")) { config.WatchdogEnabled = Convert.ToBoolean(patch["watchdogEnabled"], CultureInfo.InvariantCulture); }
+            if (patch.ContainsKey("testMode")) { config.TestMode = Convert.ToBoolean(patch["testMode"], CultureInfo.InvariantCulture); }
+            if (patch.ContainsKey("testLockdownSeconds"))
+            {
+                int seconds = Convert.ToInt32(patch["testLockdownSeconds"], CultureInfo.InvariantCulture);
+                if (seconds < 15) { seconds = 15; }
+                if (seconds > 3600) { seconds = 3600; }
+                config.TestLockdownSeconds = seconds;
+            }
             if (patch.ContainsKey("autoStart")) { config.AutoStart = Convert.ToBoolean(patch["autoStart"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("kernelDriverEnabled")) { config.KernelDriverEnabled = Convert.ToBoolean(patch["kernelDriverEnabled"], CultureInfo.InvariantCulture); }
             if (patch.ContainsKey("ykmanPath")) { config.YkmanPath = Convert.ToString(patch["ykmanPath"], CultureInfo.InvariantCulture); }
@@ -961,6 +973,8 @@ namespace AegisWall.Core
             status.KeyRemovalAction = config.KeyRemovalAction;
             status.KernelDriverEnabled = config.KernelDriverEnabled;
             status.WatchdogEnabled = config.WatchdogEnabled;
+            status.TestMode = config.TestMode;
+            status.TestLockdownSeconds = config.TestLockdownSeconds;
             status.AutoStart = config.AutoStart;
             status.WdacPolicyPath = config.WdacPolicyPath;
             status.GraceSeconds = config.GraceSeconds;
@@ -1011,3 +1025,4 @@ namespace AegisWall.Core
         }
     }
 }
+

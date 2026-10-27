@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 
@@ -37,6 +37,8 @@ namespace AegisWall.Core
         public bool KernelDriverEnabled { get; set; }
         public bool WatchdogEnabled { get; set; }
         public bool AutoStart { get; set; }
+        public bool TestMode { get; set; }
+        public int TestLockdownSeconds { get; set; }
         public string WdacPolicyPath { get; set; }
         public int GraceSeconds { get; set; }
         public string ServiceStartedUtc { get; set; }
@@ -60,6 +62,8 @@ namespace AegisWall.Core
             KeyRemovalAction = "BlockAll";
             WdacPolicyPath = string.Empty;
             GraceSeconds = 30;
+            TestMode = false;
+            TestLockdownSeconds = 60;
             ServiceStartedUtc = string.Empty;
         }
 
@@ -130,3 +134,4 @@ namespace AegisWall.Core
         }
     }
 }
+

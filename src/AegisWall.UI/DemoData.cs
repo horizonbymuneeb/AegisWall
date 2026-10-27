@@ -23,6 +23,8 @@ namespace AegisWall.UI
             config.DnsMode = "System";
             config.KeyRemovalAction = "BlockAll";
             config.WatchdogEnabled = true;
+            config.TestMode = true;
+            config.TestLockdownSeconds = 60;
             config.AutoStart = true;
             config.KernelDriverEnabled = false;
             config.WdacPolicyPath = string.Empty;
@@ -79,6 +81,14 @@ namespace AegisWall.UI
             status.LastEvent = "key.unlock";
             status.UpdatedUtc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
 
+            if (string.Equals(page, "lab", StringComparison.OrdinalIgnoreCase))
+            {
+                status.TestMode = true;
+                status.TestLockdownSeconds = 60;
+                status.BlockedAttempts = 13;
+                status.LockdownCount = 3;
+            }
+
             if (string.Equals(page, "lockdown", StringComparison.OrdinalIgnoreCase))
             {
                 status.State = "Lockdown";
@@ -103,6 +113,24 @@ namespace AegisWall.UI
             entries.Add(Entry(2, DateTime.UtcNow.AddMinutes(-61), "arm", "Protection armed", "admin"));
             entries.Add(Entry(1, DateTime.UtcNow.AddMinutes(-62), "service.start", "AegisWall " + ProtectionEngine.Version, "service"));
             return entries;
+        }
+
+        public static LastCommandResult LastCommand()
+        {
+            LastCommandResult result = new LastCommandResult();
+            result.Ok = true;
+            result.Message = "Beacon blocked by AegisWall";
+            result.Utc = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+            result.Data = Json.Serialize(new
+            {
+                beacon = @"C:\Temp\AegisWallTest\beacon.exe",
+                exitCode = 7,
+                blocked = true,
+                blockedAttemptsBefore = 12,
+                blockedAttemptsAfter = 13,
+                lockdown = true
+            });
+            return result;
         }
 
         private static AllowedApp App(string name, string path, bool inbound)

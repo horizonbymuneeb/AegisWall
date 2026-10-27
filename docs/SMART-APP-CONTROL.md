@@ -1,4 +1,4 @@
-﻿# Smart App Control (SAC) and AegisWall
+# Smart App Control (SAC) and AegisWall
 
 AegisWall is open source and, by default, the downloaded EXEs are **not code-signed**. Windows 11 **Smart App Control** blocks unsigned or untrusted executables. That is a Windows security decision, not an AegisWall bug. There is no per-app "allow" button inside Smart App Control.
 
@@ -30,7 +30,7 @@ Typical values:
 
 The AegisWall installer reads this value and warns before installing unsigned EXEs.
 
-## Option 1 â€” Portable mode (works with SAC on)
+## Option 1 - Portable mode (works with SAC on)
 
 Portable mode runs the UI, CLI, and service through the **signed PowerShell host** instead of loading the unsigned AegisWall EXEs. Smart App Control does not block the signed PowerShell host.
 
@@ -67,14 +67,14 @@ Trade-offs:
 - The service also compiles at start-up. Check `%ProgramData%\AegisWall\service-bootstrap.log` if it fails.
 - Some enterprise WDAC policies block unsigned scripts even when the host is signed. In that case use a signed release.
 
-## Option 2 â€” Code-signed release (recommended for distribution)
+## Option 2 - Code-signed release (recommended for distribution)
 
 Sign the EXEs with a trusted code-signing certificate and build reputation. Smart App Control trusts signed code with good reputation; a brand-new certificate may still be blocked until reputation accumulates.
 
 Recommended for open source:
 
-- **SignPath Foundation** â€” free code signing for eligible OSS projects.
-- **Azure Trusted Signing** â€” Microsoft-managed signing for organizations.
+- **SignPath Foundation** - free code signing for eligible OSS projects.
+- **Azure Trusted Signing** - Microsoft-managed signing for organizations.
 - A traditional OV/EV code-signing certificate.
 
 Sign the following files:
@@ -93,11 +93,11 @@ Get-AuthenticodeSignature .\AegisWall.UI.exe | Format-List Status, SignerCertifi
 
 For release automation, keep signing secrets in GitHub Actions secrets and sign only after the build and tests pass. Never commit a `.pfx` or its password.
 
-## Option 3 â€” Turn Smart App Control off (security trade-off)
+## Option 3 - Turn Smart App Control off (security trade-off)
 
 Microsoft's supported UI:
 
-1. **Windows Security** â†’ **App & browser control** â†’ **Smart App Control**.
+1. **Windows Security** -> **App & browser control** -> **Smart App Control**.
 2. Click **Off**.
 3. Confirm.
 
@@ -108,7 +108,7 @@ Important:
 - Do **not** flip `VerifiedAndReputablePolicyState` in the registry as a shortcut. It can leave Windows in an inconsistent state and block many apps.
 - After changing SAC, reboot and re-run the AegisWall installer.
 
-## Option 4 â€” Enterprise WDAC allow policy
+## Option 4 - Enterprise WDAC allow policy
 
 If the PC is managed by WDAC/App Control for Business, ask the administrator to allow AegisWall by **publisher** (preferred) or by **file hash** (brittle across updates).
 

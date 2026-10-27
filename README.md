@@ -1,4 +1,4 @@
-﻿# AegisWall
+# AegisWall
 
 **Hardware-anchored application firewall and network killswitch for Windows 10 and 11.**
 
@@ -23,30 +23,32 @@ AegisWall enforces a strict per-application allowlist with Windows Filtering Pla
 
 ## Features
 
-- **Strict application allowlist** â€” only approved executables can reach the network.
-- **Per-app control** â€” outbound, inbound and enabled toggles for every app.
-- **Trigger-based lockdown** â€” a blocked connection cuts all external traffic for a custom timer.
-- **Grace period** â€” reinsert the hardware key within 30 seconds (configurable) before fail-closed.
-- **YubiKey anchor** â€” HMAC-SHA1 challenge-response in slot 2, with optional touch policy.
-- **USB key anchor** â€” a DPAPI machine-bound `aegiswall.key` on a labeled USB drive.
-- **Fail-closed** â€” persistent WFP filters remain if the service crashes or is stopped while armed.
-- **Signed policy** â€” the config is HMAC-signed by a vault key unlocked by the hardware key.
-- **Tamper-evident audit** â€” every decision is appended to a SHA-256 hash chain.
-- **Portable mode** â€” PowerShell-hosted UI, CLI and service for PCs with Smart App Control enabled.
-- **CLI automation** â€” allow, remove, arm, disarm, lockdown, import/export, diagnostics.
-- **No cloud** â€” no accounts, telemetry or network calls. Everything is local.
+- **Strict application allowlist** - only approved executables can reach the network.
+- **Installed app discovery** - scan Start Menu, uninstall registry and App Paths, then allow real apps.
+- **Per-app control** - outbound, inbound and enabled toggles for every app.
+- **Trigger-based lockdown** - a blocked connection cuts all external traffic for a custom timer.
+- **Grace period** - reinsert the hardware key within 30 seconds (configurable) before fail-closed.
+- **YubiKey anchor** - HMAC-SHA1 challenge-response in slot 2, with optional touch policy.
+- **USB key anchor** - a DPAPI machine-bound `aegiswall.key` on a labeled USB drive.
+- **Fail-closed** - persistent WFP filters remain if the service crashes or is stopped while armed.
+- **Signed policy** - the config is HMAC-signed by a vault key unlocked by the hardware key.
+- **Tamper-evident audit** - every decision is appended to a SHA-256 hash chain.
+- **Portable mode** - PowerShell-hosted UI, CLI and service for PCs with Smart App Control enabled.
+- **Test lab** - safe beacon test, short test lockdown, checklist and JSON report.
+- **CLI automation** - allow, remove, arm, disarm, lockdown, import/export, installed discovery, diagnostics, test commands.
+- **No cloud** - no accounts, telemetry or network calls. Everything is local.
 
 ## How it works
 
 ```text
 UI / CLI
-   â”‚  named pipe (admin only)
-   â–¼
-AegisWall service â”€â”€ WFP ALE filters â”€â”€ outbound/inbound allowlist
-   â”‚                                  â””â”€ persistent default-deny
-   â”œâ”€ config.json (HMAC-signed)
-   â”œâ”€ audit.jsonl (SHA-256 chain)
-   â””â”€ hardware key (YubiKey HMAC or USB DPAPI key file)
+   |  named pipe (admin only)
+   v
+AegisWall service -- WFP ALE filters -- outbound/inbound allowlist
+   |                                  `-- persistent default-deny
+   +-- config.json (HMAC-signed)
+   +-- audit.jsonl (SHA-256 chain)
+   `-- hardware key (YubiKey HMAC or USB DPAPI key file)
 ```
 
 - Filters are installed at `ALE_AUTH_CONNECT_V4/V6` and `ALE_AUTH_RECV_ACCEPT_V4/V6`.
@@ -142,11 +144,11 @@ The USB key file is protected with Windows DPAPI **machine scope**. It will not 
 
 ## Daily use
 
-- **Applications** â€” add apps, toggle outbound/inbound/enabled, search, import/export JSON.
-- **Lockdown** â€” set the timer, grace period, trigger rules and manual lockdown.
-- **Hardware key** â€” enroll, unlock, rotate the recovery code, inspect serial/provider.
-- **Audit log** â€” search, filter, verify the hash chain, export CSV.
-- **Settings** â€” loopback/DHCP/DNS, pinned DNS, auto-start, watchdog, WDAC path, diagnostics.
+- **Applications** - add apps, toggle outbound/inbound/enabled, search, import/export JSON.
+- **Lockdown** - set the timer, grace period, trigger rules and manual lockdown.
+- **Hardware key** - enroll, unlock, rotate the recovery code, inspect serial/provider.
+- **Audit log** - search, filter, verify the hash chain, export CSV.
+- **Settings** - loopback/DHCP/DNS, pinned DNS, auto-start, watchdog, WDAC path, diagnostics.
 
 ## CLI
 
@@ -178,6 +180,8 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 ## Screenshots
 
+> Screenshots use demo data. Real mode reads your actual allowlist, installed apps, service status and audit log.
+
 | Applications | Lockdown |
 | --- | --- |
 | ![Applications](assets/screenshot-apps.png) | ![Lockdown](assets/screenshot-lockdown.png) |
@@ -186,9 +190,9 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 | --- | --- |
 | ![Hardware key](assets/screenshot-key.png) | ![Audit log](assets/screenshot-logs.png) |
 
-| Settings |
-| --- |
-| ![Settings](assets/screenshot-settings.png) |
+| Test lab | Settings |
+| --- | --- |
+| ![Test lab](assets/screenshot-lab.png) | ![Settings](assets/screenshot-settings.png) |
 
 ## Threat model and honest limits
 
@@ -205,9 +209,9 @@ Read [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md), [docs/ARCHITECTURE.md](docs/A
 
 ## Recovery
 
-- **Key lost** â€” use the recovery code: `AegisWall.Cli.exe disarm --recovery <code>`.
-- **Recovery code lost** â€” run `uninstall.ps1 -Force`, then reinstall. Filters are removed; the old policy is gone.
-- **Service stuck** â€” `AegisWall.Cli.exe status`, then `reset --force` from an elevated prompt.
+- **Key lost** - use the recovery code: `AegisWall.Cli.exe disarm --recovery <code>`.
+- **Recovery code lost** - run `uninstall.ps1 -Force`, then reinstall. Filters are removed; the old policy is gone.
+- **Service stuck** - `AegisWall.Cli.exe status`, then `reset --force` from an elevated prompt.
 
 ## Roadmap
 
@@ -224,6 +228,7 @@ Read [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md), [docs/ARCHITECTURE.md](docs/A
 - [Architecture and sequence diagrams](docs/ARCHITECTURE.md)
 - [Test plan (MSI, keys, lockdown, tamper, uninstall)](docs/TEST-PLAN.md)
 - [Malware containment testing](docs/MALWARE-TESTING.md)
+- [Test lab and test mode](docs/TEST-LAB.md)
 - [Smart App Control and signing](docs/SMART-APP-CONTROL.md)
 - [Threat model and limits](docs/THREAT-MODEL.md)
 
@@ -237,7 +242,8 @@ Issues and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) an
 
 ## License
 
-MIT Â© 2026 AegisWall contributors. See [LICENSE](LICENSE).
+MIT (c) 2026 AegisWall contributors. See [LICENSE](LICENSE).
+
 
 
 

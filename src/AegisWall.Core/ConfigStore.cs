@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -98,6 +98,7 @@ namespace AegisWall.Core
                 if (config.LockdownMinutes <= 0) { config.LockdownMinutes = 30; }
                 if (config.LockdownMinutes > 1440) { config.LockdownMinutes = 1440; }
                 if (config.GraceSeconds < 0 || config.GraceSeconds > 3600) { config.GraceSeconds = 30; }
+                if (config.TestLockdownSeconds < 15 || config.TestLockdownSeconds > 3600) { config.TestLockdownSeconds = 60; }
                 if (string.IsNullOrEmpty(config.DnsMode)) { config.DnsMode = "System"; }
                 if (string.IsNullOrEmpty(config.KeyRemovalAction)) { config.KeyRemovalAction = "BlockAll"; }
                 if (config.WdacPolicyPath == null) { config.WdacPolicyPath = string.Empty; }
@@ -190,3 +191,4 @@ namespace AegisWall.Core
         }
     }
 }
+

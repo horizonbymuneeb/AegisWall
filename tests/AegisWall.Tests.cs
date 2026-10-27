@@ -31,6 +31,7 @@ namespace AegisWall.Tests
                 TestHardwareVault();
                 TestUsbKey();
                 TestPathUtil();
+                TestInstalledScanner();
                 TestStatus();
                 TestWfpLayout();
                 TestAuditChain();
@@ -156,6 +157,19 @@ namespace AegisWall.Tests
             Check(recovered != null, "usb recovery");
         }
 
+        private static void TestInstalledScanner()
+        {
+            List<InstalledApp> apps = InstalledAppScanner.Scan();
+            Check(apps != null, "installed scanner returns list");
+            HashSet<string> paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            bool allExist = true;
+            foreach (InstalledApp app in apps)
+            {
+                if (!File.Exists(app.Path)) { allExist = false; break; }
+                if (!paths.Add(PathUtil.Key(app.Path))) { allExist = false; break; }
+            }
+            Check(allExist, "installed scanner paths exist and are unique");
+        }
         private static void TestPathUtil()
         {
             Check(PathUtil.Key(@"C:\Test\App.exe") == PathUtil.Key(@"c:\test\app.exe"), "path key case");
@@ -197,3 +211,4 @@ namespace AegisWall.Tests
         }
     }
 }
+
