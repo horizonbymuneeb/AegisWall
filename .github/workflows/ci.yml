@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
           Write-Host 'PSScriptAnalyzer: no errors.'
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: AegisWall-build
           path: build/
