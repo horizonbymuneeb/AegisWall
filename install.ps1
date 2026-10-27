@@ -148,11 +148,17 @@ try {
     Start-Sleep -Seconds 2
     $service = Get-Service -Name $serviceName
     Write-Host ("Service status: " + $service.Status)
+    if ($ServiceOnly -and $service.Status -ne 'Running') {
+        throw "AegisWall service status is $($service.Status). Check the service log and Smart App Control settings."
+    }
 }
 catch {
     Write-Warning "Service did not start: $($_.Exception.Message)"
     if ($Portable) {
         Write-Host "Check $dataDir\service-bootstrap.log"
+    }
+    if ($ServiceOnly) {
+        throw
     }
 }
 
